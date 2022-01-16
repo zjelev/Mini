@@ -16,6 +16,8 @@ namespace BigBlueButtonUsers
             sw.Start();
 
             string emailDomain;
+            string passwd = args[0];
+
             if (args.Length == 1)
             {
                 emailDomain = String.Empty;
@@ -24,13 +26,12 @@ namespace BigBlueButtonUsers
             {
                 emailDomain = args[1];
             }
+            
+            //dotnet run passwd somedomain.com 
+            string preparedEmails = SendEmails(inputFile, emailDomain);
+            inputFile = preparedEmails;
 
-            // dotnet run passwd somedomain.com 
-            string preparedEmails = SentEmails(inputFile, emailDomain);
-
-            CreateUsers(preparedEmails, args[0]);
-
-            //CreateUsersFromTabbedTxt(inputFile, passwd, emailDomain);
+            CreateUsers(inputFile, passwd);
 
             sw.Stop();
             Console.WriteLine($"Output files containing the commands are created in {sw.ElapsedTicks} timer ticks.{Environment.NewLine}" +
@@ -38,21 +39,22 @@ namespace BigBlueButtonUsers
 
         }
 
-        private static string SentEmails(string namesEmailTab, string emailDomain)
+        private static string SendEmails(string namesEmailInLines, string emailDomain)
         {
-            string outputFile = path + "SendEmailsTo.txt";
-            using (var reader = new StreamReader(namesEmailTab))
+            string preparedEmails = path + "SendEmails.txt";
+            using (var reader = new StreamReader(namesEmailInLines))
             {
-                using (var writer = new StreamWriter(outputFile))
+                using (var writer = new StreamWriter(preparedEmails))
                 {
                     string line = reader.ReadLine();
                     int usersWithEmails = 0;
                     
                     while (line != null)
                     {
-                        string[] lineArr = line.Split("\t", StringSplitOptions.RemoveEmptyEntries);
-                        string firstName = lineArr[0];
-                        string lastName = lineArr[lineArr.Length - 2];
+                        string[] separator =  { "\t", " <", ">; ", "\"", "<", ">", ";", "'", " " };
+                        string[] lineArr = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                        string firstName = StringExtensions.FirstCharToUpper(lineArr[0]);
+                        string lastName = StringExtensions.FirstCharToUpper(lineArr[lineArr.Length - 2]);
                         string email = lineArr[lineArr.Length - 1];
                         
                         if (line.Contains(emailDomain))
@@ -69,8 +71,8 @@ namespace BigBlueButtonUsers
                         line = reader.ReadLine();
                     }
 
-                    Console.WriteLine($"{usersWithEmails} email adresses prepared in file {outputFile}" + Environment.NewLine);
-                    return outputFile;
+                    Console.WriteLine($"{usersWithEmails} email adresses prepared in file {preparedEmails}" + Environment.NewLine);
+                    return preparedEmails;
 
                 }
             }
@@ -87,14 +89,14 @@ namespace BigBlueButtonUsers
 
                     while (line != null)
                     {
-                        string[] separator =  { " <", ">; ", "\"", "<", ">", ";" }; //no matter if name is in quotes
+                        string[] separator =  { " <", ">; ", "\"", "<", ">", ";", "'" }; //no matter if name is in " or ' or space
                         string[] lineArr = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                         string name = String.Empty;
                         string email = String.Empty;
                         
                         for (int i = 0; i < lineArr.Length-1; i=i+2)
                         {
-                            name = lineArr[i];
+                            name = StringExtensions.FirstCharToUpper(lineArr[i]);
                             email = lineArr[i+1];
                             string newLine = string.Concat("docker exec greenlight-v2 bundle exec rake user:create[\"", name, "\",\"", email, "\",\"", passwd, "\",\"user\"]");
                             writer.WriteLine(newLine);
@@ -108,44 +110,5 @@ namespace BigBlueButtonUsers
                 }
             }
         }
-    
-        //Obsolete
-        private static void CreateUsersFromTabbedTxt(string namesEmailTab, string passwd, string emailDomain)
-        {
-            //Input should be lines with names(1 or more) and e-mail, separated with tabs
-
-            using (var reader = new StreamReader(namesEmailTab))
-            {
-                using (var writer = new StreamWriter(path + "CreateUsersFromTabbed.txt"))
-                {
-                    string line = reader.ReadLine();
-                    int allUsers = 0;
-                    int usersWithEmails = 0;
-                    while (line != null)
-                    {
-                        allUsers++;
-                        if (line.Contains(emailDomain))
-                        {
-                            // More complex, that's why abandoned for now
-                            // string pattern = @"[\w-]+@([\w-]+\.)+[\w-]+";
-                            // Regex regex = new Regex(pattern);
-                            // string replacement = @".";
-                            // newLine = regex.Replace(pattern, replacement);
-
-                            string[] lineArr = line.Split("\t", StringSplitOptions.RemoveEmptyEntries);
-                            lineArr[lineArr.Length - 2] = lineArr[lineArr.Length - 2] + "\",\"" + lineArr[lineArr.Length - 1];
-                            lineArr[lineArr.Length - 1] = String.Empty;
-                            string newLine = string.Join(" ", lineArr).Trim();
-                            newLine = string.Concat("docker exec greenlight-v2 bundle exec rake user:create[\"", newLine, "\",\"", passwd, "\",\"user\"]");
-                            writer.WriteLine(newLine);
-                            usersWithEmails++;
-                        }
-                        line = reader.ReadLine();
-                    }
-                    Console.WriteLine($"From {allUsers} users with e-mails {usersWithEmails} have e-mails ending in {emailDomain}" + Environment.NewLine);
-                }
-            }
-        }
-    
     }
 }
