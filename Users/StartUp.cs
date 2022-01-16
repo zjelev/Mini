@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace BigBlueButtonUsers
 {
@@ -26,17 +27,35 @@ namespace BigBlueButtonUsers
             {
                 emailDomain = args[1];
             }
-            
-            //dotnet run passwd somedomain.com 
-            string preparedEmails = SendEmails(inputFile, emailDomain);
-            inputFile = preparedEmails;
 
-            CreateUsers(inputFile, passwd);
+            //dotnet run passwd somedomain.com
+            string separatedLines = SeparateToLines(inputFile);
+
+            string preparedEmails = SendEmails(separatedLines, emailDomain);
+            
+            CreateUsers(preparedEmails, passwd);
 
             sw.Stop();
             Console.WriteLine($"Output files containing the commands are created in {sw.ElapsedTicks} timer ticks.{Environment.NewLine}" +
                                 "You can now paste the generated commands on the BigBlueButton console as root.");
 
+        }
+
+        private static string SeparateToLines(string inputFile)
+        {
+            string separatedLines = path + "SeparatedLines.txt";
+            using (var reader = new StreamReader(inputFile))
+            {
+                using (var writer = new StreamWriter(separatedLines))
+                {
+                    string file = reader.ReadToEnd();
+                    file = file.Replace(">", ">" + Environment.NewLine);
+                    file = Regex.Replace(file, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
+                    file = file.Remove(file.Length - 2);
+                    writer.Write(file);
+                }
+            }
+            return separatedLines;
         }
 
         private static string SendEmails(string namesEmailInLines, string emailDomain)
