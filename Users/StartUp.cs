@@ -51,7 +51,10 @@ namespace BigBlueButtonUsers
                     string file = reader.ReadToEnd();
                     file = file.Replace(">", ">" + Environment.NewLine);
                     file = Regex.Replace(file, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
-                    file = file.Remove(file.Length - 2);
+                    if (file[file.Length - 1].ToString().Contains('\n'))
+                    {
+                        file = file.Remove(file.Length - 1);      
+                    }
                     writer.Write(file);
                 }
             }
