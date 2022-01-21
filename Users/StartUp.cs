@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace BigBlueButtonUsers
@@ -29,10 +30,15 @@ namespace BigBlueButtonUsers
             }
 
             //dotnet run passwd somedomain.com
-            string separatedLines = SeparateToLines(inputFile);
+            string namesEmailInLines = SeparateToLines(inputFile);
 
-            string preparedEmails = SendEmails(separatedLines, emailDomain);
+            string preparedEmails = SendEmails(namesEmailInLines, emailDomain);
             
+            using (var writer = new StreamWriter(path + "SendEmails.txt"))
+            {
+                writer.Write(preparedEmails);
+                Console.WriteLine("Email adresses prepared in file ..\\SendEmails.txt");
+            }
             CreateUsers(preparedEmails, passwd);
 
             sw.Stop();
@@ -44,67 +50,74 @@ namespace BigBlueButtonUsers
         private static string SeparateToLines(string inputFile)
         {
             string separatedLines = path + "SeparatedLines.txt";
+            string output;
             using (var reader = new StreamReader(inputFile))
             {
-                using (var writer = new StreamWriter(separatedLines))
-                {
-                    string file = reader.ReadToEnd();
-                    file = file.Replace(">", ">" + Environment.NewLine);
-                    file = Regex.Replace(file, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
-                    if (file[file.Length - 1].ToString().Contains('\n'))
+                //using (var writer = new StreamWriter(separatedLines))
+                //{
+                    output = reader.ReadToEnd();
+                    output = output.Replace(";", Environment.NewLine);
+                    output = output.Replace(">", ">" + Environment.NewLine);
+                    
+                    output = Regex.Replace(output, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
+                    if (output[output.Length - 1].ToString().Contains('\n'))
                     {
-                        file = file.Remove(file.Length - 1);      
+                        output = output.Remove(output.Length - 1);      
                     }
-                    writer.Write(file);
-                }
+                    //writer.Write(file);
+                //}
             }
-            return separatedLines;
+            return output;
         }
 
         private static string SendEmails(string namesEmailInLines, string emailDomain)
         {
-            string preparedEmails = path + "SendEmails.txt";
-            using (var reader = new StreamReader(namesEmailInLines))
-            {
-                using (var writer = new StreamWriter(preparedEmails))
-                {
-                    string line = reader.ReadLine();
+            StringReader reader = new StringReader(namesEmailInLines);
+            StringBuilder writer = new StringBuilder();
+            //using (var reader = new StreamReader(namesEmailInLines))
+            //{
+            //using (var writer = new StreamWriter(preparedEmails))
+            //{
+            string line = reader.ReadLine();
                     int usersWithEmails = 0;
                     
                     while (line != null)
                     {
                         string[] separator =  { "\t", " <", ">; ", "\"", "<", ">", ";", "'", " " };
                         string[] lineArr = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                        string firstName = StringExtensions.FirstCharToUpper(lineArr[0]);
-                        string lastName = StringExtensions.FirstCharToUpper(lineArr[lineArr.Length - 2]);
+                    if (lineArr.Length > 0)
+                    {
+                        string firstName = StringExtensions.FirstCharToUpperNextToLower(lineArr[0]);
+                        string lastName = StringExtensions.FirstCharToUpperNextToLower(lineArr[lineArr.Length - 2]);
                         string email = lineArr[lineArr.Length - 1];
-                        
+
                         if (line.Contains(emailDomain))
                         {
                             string newLine = string.Concat(firstName, " ", lastName, " <", email, ">; ");
-                            writer.Write(newLine);
+                            writer.Append(newLine);
                             usersWithEmails++;
                         }
                         else
                         {
                             Console.WriteLine($"{firstName} {lastName} has different email domain: {email}. Skipped.");
                         }
-                        
-                        line = reader.ReadLine();
                     }
 
-                    Console.WriteLine($"{usersWithEmails} email adresses prepared in file {preparedEmails}" + Environment.NewLine);
-                    return preparedEmails;
+                    line = reader.ReadLine();
+                    }
 
-                }
-            }
+                    Console.WriteLine($"{usersWithEmails} email adresses prepared");
+                    return writer.ToString();
+                //}
+            //}
         }
 
         private static void CreateUsers(string preparedEmails, string passwd)
         {
-            using (var reader = new StreamReader(preparedEmails))
-            {
-                using (var writer = new StreamWriter(outputFile))
+            //using (var reader = new StreamReader(preparedEmails))
+            //{
+            StringReader reader = new StringReader(preparedEmails);
+            using (var writer = new StreamWriter(outputFile))
                 {
                     string line = reader.ReadLine();
                     int counter = 0;
@@ -118,7 +131,7 @@ namespace BigBlueButtonUsers
                         
                         for (int i = 0; i < lineArr.Length-1; i=i+2)
                         {
-                            name = StringExtensions.FirstCharToUpper(lineArr[i]);
+                            name = lineArr[i][0].ToString().ToUpper() + lineArr[i].Substring(1);
                             email = lineArr[i+1];
                             string newLine = string.Concat("docker exec greenlight-v2 bundle exec rake user:create[\"", name, "\",\"", email, "\",\"", passwd, "\",\"user\"]");
                             writer.WriteLine(newLine);
@@ -130,7 +143,7 @@ namespace BigBlueButtonUsers
 
                     Console.WriteLine($"{counter} users prepared in file {outputFile}" + Environment.NewLine);
                 }
-            }
+            //}
         }
     }
 }
