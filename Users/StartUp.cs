@@ -5,23 +5,20 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace BigBlueButtonUsers
+namespace BBBUsers
 {
     class StartUp
     {
         private static string path = ".." + Path.DirectorySeparatorChar;
         private static string inputFile = path + "Input.txt";
-        private static string outputFile = path + "CreateUsers.txt";
 
         static void Main(string[] args)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            string createUsers;
 
             if (File.Exists(inputFile))
             {
-                //dotnet run passwd somedomain.com
                 string emailDomain = String.Empty;
                 string passwd = "123456";
 
@@ -32,25 +29,25 @@ namespace BigBlueButtonUsers
 
                 if (args.Length > 1)
                 {
-                    emailDomain = args[1];
+                    emailDomain = args[1];      //dotnet run passwd somedomain.com
                 }
 
-                string namesEmailInLines = SeparateToLines(inputFile);
+                List<User> users = addNewUsers(inputFile);
 
-                string preparedEmails = SendEmails(namesEmailInLines, emailDomain);
+                string sendEmails = SendEmails(users, emailDomain);
 
-                using (var writer = new StreamWriter(path + "SendEmails.txt"))
+                using (var writer = new StreamWriter(path + "SendEmails.html"))
                 {
-                    writer.Write(preparedEmails);
-                    Console.WriteLine($"in file {path}SendEmails.txt");
+                    writer.Write(sendEmails);
+                    Console.WriteLine($"in {path}SendEmails.html. Click on the link in this page to send emails");
                 }
 
-                createUsers = CreateUsers(preparedEmails, passwd);
+                string createUsers = CreateUsers(users, passwd);
 
-                using (var writer = new StreamWriter(outputFile))
+                using (var writer = new StreamWriter(path + "CreateUsers.txt"))
                 {
                     writer.Write(createUsers);
-                    Console.WriteLine($"in file {outputFile}." + Environment.NewLine +
+                    Console.WriteLine($"in file {path}CreateUsers.txt." + Environment.NewLine +
                     "You can now paste the generated commands on the BigBlueButton console as root.");
                 }
             }
@@ -59,13 +56,12 @@ namespace BigBlueButtonUsers
             {
                 using (var reader = new StreamReader(path + "CreatedUsers.txt"))
                 {
-                    createUsers = reader.ReadToEnd();
+                    string createUsers = reader.ReadToEnd();
                     List<User> users = UsersFromCommands(createUsers);
 
                     StringBuilder sb = new StringBuilder();
                     foreach (var user in users)
                     {
-                        //sb.AppendLine(user.ToString());
                         sb.Append($"{user.FirstName} {user.LastName} <{user.Email}>; ");
                     }
 
@@ -78,96 +74,100 @@ namespace BigBlueButtonUsers
             }
             else
             {
-                Console.WriteLine($"Neither {inputFile} nor ..\\CreatedUsers.txt found. Please provide one or both.");
-                return;
+                Console.WriteLine($"CreatedUsers.txt not found. Users are not sorted in file.");
             }
 
             sw.Stop();
-            Console.WriteLine($"Output took {sw.ElapsedTicks} timer ticks.");
+            Console.WriteLine($"It took {sw.ElapsedTicks} timer ticks.");
         }
 
-        private static string SeparateToLines(string inputFile)
+        private static List<User> addNewUsers(string inputFile)
         {
-            string output;
+            List<User> users = new List<User>();
+            string lines;
+            string[] namesEmail;
             using (var reader = new StreamReader(inputFile))
             {
-                output = reader.ReadToEnd();
-                output = output.Replace(";", Environment.NewLine);
-                output = output.Replace(">", ">" + Environment.NewLine);
-
-                output = Regex.Replace(output, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
-                if (output[output.Length - 1].ToString().Contains('\n'))
-                {
-                    output = output.Remove(output.Length - 1);
-                }
+                lines = reader.ReadToEnd();
+                lines = lines.Replace(";", Environment.NewLine);
+                lines = lines.Replace(">", ">" + Environment.NewLine);
+                lines = Regex.Replace(lines, @"^\s+$[\r\n]*", string.Empty, RegexOptions.Multiline);
             }
-            return output;
-        }
+            namesEmail = lines.Split(Environment.NewLine);
 
-        private static string SendEmails(string namesEmailInLines, string emailDomain)
-        {
-            StringReader reader = new StringReader(namesEmailInLines);
-            StringBuilder writer = new StringBuilder();
-
-            string line = reader.ReadLine();
-            int usersWithEmails = 0;
-
-            while (line != null)
+            foreach (var line in namesEmail)
             {
                 string[] separator = { "\t", " <", ">; ", "\"", "<", ">", ";", "'", " " };
                 string[] lineArr = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                 if (lineArr.Length > 0)
                 {
-                    string firstName = StringExtensions.FirstCharToUpperNextToLower(lineArr[0]);
-                    string lastName = StringExtensions.FirstCharToUpperNextToLower(lineArr[lineArr.Length - 2]);
+                    string firstName = Extensions.FirstCharToUpperNextToLower(lineArr[0]);
+                    string lastName = Extensions.FirstCharToUpperNextToLower(lineArr[lineArr.Length - 2]);
                     string email = lineArr[lineArr.Length - 1];
+                    User user = new User(firstName, lastName, email);
+                    users.Add(user);
+                }
+            }
+            return users;
+        }
 
-                    if (line.Contains(emailDomain))
+        private static string SendEmails(List<User> users, string emailDomain)
+        {
+            StringBuilder writer = new StringBuilder();
+            string header =
+    @"<!DOCTYPE html>
+    <head>
+    <meta charset=" + "\"UTF-8\">" +
+    @"<title>Send Emails</title>
+    </head>
+    <body>";
+            writer.Append(header);
+
+            int usersWithEmails = 0;
+            int chunks = 0;
+            List<List<User>> userChunks = Extensions.SplitList(users) as List<List<User>>;
+            foreach (var chunk in userChunks)
+            {
+                writer.AppendLine("<a href=\"mailto:");
+                foreach (var user in chunk)
+                {
+                    if (user.Email.Contains(emailDomain))
                     {
-                        string newLine = string.Concat(firstName, " ", lastName, " <", email, ">; ");
-                        writer.Append(newLine);
+                        string email = string.Concat(user.Email, "; ");
+                        writer.Append(email);
                         usersWithEmails++;
                     }
                     else
                     {
-                        Console.WriteLine($"{firstName} {lastName} has different email domain: {email}. Skipped.");
+                        Console.WriteLine($"{user.FirstName} {user.LastName} has different email domain: {user.Email}. Skipped.");
                     }
                 }
 
-                line = reader.ReadLine();
+                writer.Length--;   //remove the last ' ' 
+                writer.Length--;   //remove the last ',' 
+                writer.Append("?subject=Online meetings&body=Hello," + "%0D%0A" + "%0D%0A" +
+                                "Please test our server demo.bigbluebutton.com" + "%0D%0A" + "%0D%0A" +
+                                "Regards," + "%0D%0A" + "%0D%0A" +
+                                "Administrator" + "%0D%0A" +
+                                $"\">Email new users {chunks++}<p></a>");
             }
-
-            Console.Write($"{usersWithEmails} email adresses prepared ");
+            string footer = "\n</body>\n</html>";
+            writer.Append(footer);
+            Console.Write($"{usersWithEmails} email addresses generated ");
             return writer.ToString();
         }
 
-        private static string CreateUsers(string preparedEmails, string passwd)
+        private static string CreateUsers(List<User> users, string passwd)
         {
-            StringReader reader = new StringReader(preparedEmails);
             StringBuilder writer = new StringBuilder();
 
-            string line = reader.ReadLine();
-            int counter = 0;
-
-            while (line != null)
+            foreach (var user in users)
             {
-                string[] separator = { " <", ">; ", "\"", "<", ">", ";", "'" }; //no matter if name is in " or ' or space
-                string[] lineArr = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-                string name = String.Empty;
-                string email = String.Empty;
-
-                for (int i = 0; i < lineArr.Length - 1; i = i + 2)
-                {
-                    name = lineArr[i][0].ToString().ToUpper() + lineArr[i].Substring(1);
-                    email = lineArr[i + 1];
-                    string newLine = string.Concat("docker exec greenlight-v2 bundle exec rake user:create[\"", name, "\",\"", email, "\",\"", passwd, "\",\"user\"]");
-                    writer.AppendLine(newLine);
-                    counter++;
-                }
-                line = reader.ReadLine();
+                string newLine = string.Concat("docker exec greenlight-v2 bundle exec rake user:create[\"", user.FirstName, " ", user.LastName, "\",\"", user.Email, "\",\"", passwd, "\",\"user\"]");
+                writer.AppendLine(newLine);
             }
 
-            Console.Write($"Commands for creating {counter} users prepared ");
+            Console.Write($"Commands for creating {users.Count} users prepared ");
             return writer.ToString();
         }
 

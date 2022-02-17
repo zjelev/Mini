@@ -1,6 +1,8 @@
-namespace BigBlueButtonUsers
+using System;
+
+namespace BBBUsers
 {
-    class User
+    public class User
     {
         private string firstName;
         private string lastName;
@@ -16,9 +18,23 @@ namespace BigBlueButtonUsers
 
         public string LastName { get => lastName; private set => lastName = value; }
 
-        public string Email { get => email; private set => email = value; }
+        public string Email
+        {
+            get => email;
+            private set
+            {
+                if (value.Contains("@"))
+                {
+                    this.email = value;
+                }
+                else
+                {
+                    Console.WriteLine($"{value} doesn't seem like a valid email");
+                }
+            }
+        }
 
-        public override string ToString() 
+        public override string ToString()
         {
             return FirstName + ' ' + LastName + ' ' + Email;
         }
