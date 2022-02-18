@@ -15,13 +15,13 @@ namespace BBBUsers
             }
         }
 
-        public static List<List<T>> SplitList<T>(List<T> users, int nSize = 6)
+        public static IEnumerable<List<T>> SplitList<T>(List<T> chunks, int nSize = 6)
         {
             var list = new List<List<T>>();
 
-            for (int i = 0; i < users.Count; i += nSize)
+            for (int i = 0; i < chunks.Count; i += nSize)
             {
-                list.Add(users.GetRange(i, Math.Min(nSize, users.Count - i)));
+                list.Add(chunks.GetRange(i, Math.Min(nSize, chunks.Count - i)));
             }
 
             return list;
