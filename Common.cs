@@ -5,7 +5,7 @@ namespace ExcelUtils
 {
     public class Common
     {
-        public static void GetHeaderFromFile(string file, out string fileName, out int year, out string month, out string podName, out string podNumberStr)
+        public static void GetHeaderFromLeon(string file, out string fileName, out int year, out string month, out string podName, out string podNumberStr)
         {
             fileName = Path.GetFileName(file);
             year = int.Parse(fileName.Substring(0, 4));
