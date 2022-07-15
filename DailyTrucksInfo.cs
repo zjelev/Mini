@@ -4,7 +4,7 @@ namespace ExcelUtils
 {
     public class DailyTrucksInfo
     {
-        public DailyTrucksInfo(DateTime date, byte shift, decimal netWeightInTons, int numOfTrucks)
+        public DailyTrucksInfo(DateTime date, int shift, decimal netWeightInTons, int numOfTrucks)
         {
             this.Date = date;
             this.Shift = shift;
@@ -18,9 +18,9 @@ namespace ExcelUtils
             //this.Client = "";
         }
         public string Client { get; set; }
-        public byte MineNum { get; set; }
+        public int MineNum { get; set; }
         public DateTime Date { get; set; }
-        public byte Shift { get; set; }
+        public int Shift { get; set; }
         public decimal NetWeightInTons { get; set; }
         public string AshesPercent { get; set; }
         public int NumOfTrucks { get; set; }

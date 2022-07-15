@@ -3,25 +3,39 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace ExcelUtils
 {
     public class WeightNotes
     {
-        public static DailyTrucksInfo GetTotal(string note)
+        public static DailyTrucksInfo GetTotalForTheDay(string note)
         {
             string[] lines = File.ReadAllLines(note, Program.srcEncoding);
             string supplier = lines[0].Trim();
             string header = lines[1].Trim();
             string periodTemp = lines[3].Trim();
             string period = periodTemp.Substring(0, 13);
-            string from = periodTemp.Substring(14, 14);
-            DateTime fromDate = DateTime.ParseExact(from, "dd/MM/yy HH:mm", System.Globalization.CultureInfo.InvariantCulture);
-            string to = periodTemp.Substring(periodTemp.Length - 14, 14);
-            DateTime toDate = DateTime.ParseExact(to, "dd/MM/yy HH:mm", System.Globalization.CultureInfo.InvariantCulture);
-            string condition = lines[4].Trim();
+            string from = periodTemp.Substring(14, 14).Trim();
 
-            // List<Measure> measures = GetMeasuresForFirstContractor(lines);
+            DateTime fromDate;
+            DateTime toDate;
+            string to;
+
+            if (from.Length > 8)
+            {
+                fromDate = DateTime.ParseExact(from, "dd/MM/yy HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+                to = periodTemp.Substring(periodTemp.Length - 14, 14).Trim();
+                toDate = DateTime.ParseExact(to, "dd/MM/yy HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                fromDate = DateTime.ParseExact(from, "dd/MM/yy", System.Globalization.CultureInfo.InvariantCulture);
+                to = periodTemp.Substring(periodTemp.Length - 8, 8).Trim();
+                toDate = DateTime.ParseExact(to, "dd/MM/yy", System.Globalization.CultureInfo.InvariantCulture);
+            }
+
+            string condition = lines[4].Trim();
 
             int totalLineNum = 5;
             while (!lines[totalLineNum].StartsWith(" | ВСИЧКО:"))
@@ -40,46 +54,81 @@ namespace ExcelUtils
             {
                 lastMeasure = Array.ConvertAll(lines[lastMeasureLineNum--].Split('|', StringSplitOptions.RemoveEmptyEntries), cl => cl.Trim());
             }
-
-            DailyTrucksInfo dailyTrucksInfo = new DailyTrucksInfo(fromDate, 1, totalNet / 1000.0m, int.Parse(lastMeasure[1]));
+            string noteFileName = Path.GetFileName(note);
+            int shift = 1;
+            if (noteFileName.Length == 16)
+            {
+                shift = int.Parse(noteFileName.Substring(noteFileName.Length - 5, 1));
+                shift = shift > 2 ? 1 : shift;
+            }
+            DailyTrucksInfo dailyTrucksInfo = new DailyTrucksInfo(fromDate, shift, totalNet / 1000.0m, int.Parse(lastMeasure[1]));
 
             return dailyTrucksInfo;
         }
 
-        public static void InsertDailyTotals(List<DailyTrucksInfo> trucksInfos, string xlsxFile, string startDate, string endDate)
+        private static DataTable InsertHeader()
         {
-            using (ExcelPackage package = new ExcelPackage(new FileInfo(xlsxFile)))
-            {
-                DataTable dataTable = new DataTable();
-                dataTable.Columns.Add("Дата", typeof(string));
-                dataTable.Columns.Add("Смяна", typeof(byte));
-                dataTable.Columns.Add("Нето [тон]", typeof(decimal));
-                dataTable.Columns.Add("Пепел [%]", typeof(string));
-                dataTable.Columns.Add("Брой камиони", typeof(int));
+            DataTable dataTable = new DataTable();
+            dataTable.Columns.Add("Дата", typeof(string));
+            dataTable.Columns.Add("Смяна", typeof(byte));
+            dataTable.Columns.Add("Нето [тон]", typeof(decimal));
+            dataTable.Columns.Add("Пепел [%]", typeof(string));
+            dataTable.Columns.Add("Брой", typeof(int));
+            return dataTable;
+        }
 
-                foreach (var trucksInfo in trucksInfos)
+        public static void InsertDailyTotals(
+            // List<DailyTrucksInfo> trucksInfos,
+            Dictionary<Tuple<int, int>, DailyTrucksInfo> dailyWeights,
+            string xlsxFile, string startDate, string endDate)
+        {
+            DataTable dataTable = InsertHeader();
+
+            foreach (var row in dailyWeights)
+            {
+                // dataTable.Rows.Add(trucksInfo.DateString, trucksInfo.Shift, trucksInfo.NetWeightInTons, trucksInfo.AshesPercent, trucksInfo.NumOfTrucks);
+                if (row.Value == null)
                 {
-                    dataTable.Rows.Add(trucksInfo.DateString, trucksInfo.Shift, trucksInfo.NetWeightInTons, trucksInfo.AshesPercent, trucksInfo.NumOfTrucks);
+                    dataTable.Rows.Add(row.Key.Item1, row.Key.Item2);
+
+                }
+                else
+                {
+                    dataTable.Rows.Add(row.Key.Item1, row.Key.Item2, row.Value.NetWeightInTons, row.Value.AshesPercent, row.Value.NumOfTrucks);
                 }
 
+            }
+
+            using (ExcelPackage package = new ExcelPackage(new FileInfo(xlsxFile)))
+            {
                 if (package.Workbook.Worksheets.Count > 0)
                 {
                     package.Workbook.Worksheets.Delete(0);
                 }
-                ExcelWorksheet ws = package.Workbook.Worksheets.Add("Автовезна р-к 3");
+                ExcelWorksheet ws = package.Workbook.Worksheets.Add("Автовезна");
+                ws.DefaultRowHeight = 13.5;
+                ws.Cells["A1:D67"].Style.Font.Size = 10;
+                ws.Cells["A1:D67"].Style.Font.Name = "Arial";
+
                 ws.Column(1).Width = 11;
                 ws.Column(2).Width = 7;
                 ws.Column(3).Width = 11;
                 ws.Column(4).Width = 11;
                 ws.Column(5).Width = 14;
 
-                ws.Cells[1, 1].Value = "Рекапитулация по дни";
+                ws.Row(5).Style.Font.Bold = true;
+                ws.Column(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                ws.Column(2).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                ws.Column(4).Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+                ws.Cells[3, 2].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+                ws.Cells[3, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Left;
+
+                ws.Cells[1, 2].Value = "Рекапитулация по дни";
                 ws.Cells["A1"].Style.Font.Bold = true;
                 ws.Cells["A3"].Style.Font.Bold = true;
                 ws.Cells[3, 1].Value = "Период: ";
                 ws.Cells[3, 2].Value = "от " + startDate;
                 ws.Cells[3, 4].Value = " до " + endDate;
-                ws.Row(5).Style.Font.Bold = true;
 
                 //add all the content from the DataTable, starting at cell A1
                 ws.Cells["A5"].LoadFromDataTable(dataTable, true);
