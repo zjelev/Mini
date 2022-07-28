@@ -18,6 +18,10 @@ namespace ExcelUtils
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             string currentDirectory = Directory.GetCurrentDirectory();
+            if (args.Length == 1)
+            {
+                currentDirectory = args[0];
+            }
             var parentDir = Directory.GetParent(currentDirectory).FullName;
             string[] directories = Directory.GetDirectories(currentDirectory);
             string[] weightNotesTxtFiles = Directory.GetFiles(currentDirectory);
@@ -116,9 +120,9 @@ namespace ExcelUtils
 
                 WeightNotes.InsertDailyTotals(
                     //trucksInfos,
-                    dailyWeights, "..\\Справка по дни.xlsx", startDate, endDate);
+                    dailyWeights, parentDir + "\\Справка по дни.xlsx", startDate, endDate);
 
-                string allMeasuresFile = "..\\Всички.csv";
+                string allMeasuresFile = parentDir + "\\Всички.csv";
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("N ; Протокол; От дата ; Рег.номер ; Бруто ; Бруто час ; Тара ; Тара час ; Нето");
                 foreach (var measure in measures)
