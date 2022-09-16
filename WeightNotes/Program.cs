@@ -51,8 +51,17 @@ namespace WeightNotes
                     else
                     {
                         Console.WriteLine($"Името на файла {Path.GetFileName(note)} не съответства на датата в него. Файлът ще бъде преименуван като датата в него.");
-                        File.Move(note, Path.GetDirectoryName(note) + "\\"
+                        try
+                        {
+                            File.Move(note, parentDir + "\\"
                             + dailyTrucksInfo.Date.ToString("yyyy-MM-dd") + ".TXT");
+                        }
+                        catch (IOException)
+                        {
+                            Console.WriteLine("Изтрийте файла с днешна дата.");
+                            File.Delete(parentDir + "\\" + dailyTrucksInfo.Date.ToString("yyyy-MM-dd") + ".TXT");
+                        }
+
                     }
 
                     measures.AddRange(currentMeasures);
@@ -85,55 +94,58 @@ namespace WeightNotes
                 File.WriteAllText(allMeasuresFile, sb.ToString(), Common.srcEncoding);
 
                 string planXlxFile = Directory.GetFiles(parentDir, "ТРОЯНОВО*.xls?").FirstOrDefault();
-                Dictionary<(DateTime, string), Measure> speditorDaily = Controller.MapMeasuresToPlan(planXlxFile);
-
-                sb = new StringBuilder();
-                sb.AppendLine("№;Дата;ВЛЕКАЧ;РЕМАРКЕ;ШОФЬОР;ЕГН;ТЕЛЕФОН;тонаж");
-                int nraCounter = 0;
-                foreach (var truckInfo in speditorDaily)
+                if (planXlxFile != null)
                 {
-                    foreach (var measure in measures)
+                    Dictionary<(DateTime, string), Measure> speditorDaily = Controller.MapMeasuresToPlan(planXlxFile);
+
+                    sb = new StringBuilder();
+                    sb.AppendLine("№;Дата;ВЛЕКАЧ;РЕМАРКЕ;ШОФЬОР;ЕГН;ТЕЛЕФОН;тонаж");
+                    int nraCounter = 0;
+                    foreach (var truckInfo in speditorDaily)
                     {
-                        try
+                        foreach (var measure in measures)
                         {
-                            string regNumVezna = measure.RegNum.ToUpper().TrimEnd();
-                            string trailerNumSpeditor = truckInfo.Value.RegNum.ToUpper().TrimEnd();
-                            regNumVezna = Common.ReplaceCyrillic(regNumVezna);
-                            trailerNumSpeditor = Common.ReplaceCyrillic(trailerNumSpeditor);
-
-                            if (measure.FromDate.Date == truckInfo.Key.Item1.Date && regNumVezna == trailerNumSpeditor)
+                            try
                             {
-                                truckInfo.Value.Netto = measure.Netto;
+                                string regNumVezna = measure.RegNum.ToUpper().TrimEnd();
+                                string trailerNumSpeditor = truckInfo.Value.RegNum.ToUpper().TrimEnd();
+                                regNumVezna = Common.ReplaceCyrillic(regNumVezna);
+                                trailerNumSpeditor = Common.ReplaceCyrillic(trailerNumSpeditor);
+
+                                if (measure.FromDate.Date == truckInfo.Key.Item1.Date && regNumVezna == trailerNumSpeditor)
+                                {
+                                    truckInfo.Value.Netto = measure.Netto;
+                                }
+                                measure.RegNum = regNumVezna;
+                                truckInfo.Value.RegNum = trailerNumSpeditor;
                             }
-                            measure.RegNum = regNumVezna;
-                            truckInfo.Value.RegNum = trailerNumSpeditor;
+                            catch (NullReferenceException nre)
+                            {
+                                Console.WriteLine($"{nre.Message} No. {nraCounter++} ");
+                            }
                         }
-                        catch (NullReferenceException nre)
-                        {
-                            Console.WriteLine($"{nre.Message} No. {nraCounter++} ");
-                        }
+                        sb.AppendLine($"{truckInfo.Value.Id};{truckInfo.Key.Item1.Date.ToString("dd.MM.yyyy")};{truckInfo.Value.TractorNum};" +
+                            $"{truckInfo.Value.RegNum};{truckInfo.Value.Driver};{truckInfo.Value.Egn};" +
+                            $"{truckInfo.Value.Phone};{truckInfo.Value.Netto}");
+
+                        // //reversed
+                        // measure.TractorNum = truckInfo.Value.TractorNum;
+                        // measure.Egn = truckInfo.Value.Egn;
+                        // measure.Phone = truckInfo.Value.Phone;
+
+                        // //byte[] isoBytes = Encoding.Convert(Encoding.UTF8, Common.srcEncoding, Encoding.UTF8.GetBytes(truckInfo.Value.Driver));
+                        // measure.Driver =
+                        //     //Encoding.UTF8.GetString(
+                        //     truckInfo.Value.Driver
+                        //     //)
+                        //     ;
+
+                        // sb.AppendLine($"{measure.Id};{measure.FromDate.Date.ToString("dd.MM.yyyy")};{measure.TractorNum};" +
+                        //     $"{measure.RegNum};{measure.Driver};{measure.Egn};" +
+                        //     $"{measure.Phone};{measure.Netto}");
                     }
-                    sb.AppendLine($"{truckInfo.Value.Id};{truckInfo.Key.Item1.Date.ToString("dd.MM.yyyy")};{truckInfo.Value.TractorNum};" +
-                        $"{truckInfo.Value.RegNum};{truckInfo.Value.Driver};{truckInfo.Value.Egn};" +
-                        $"{truckInfo.Value.Phone};{truckInfo.Value.Netto}");
-
-                    // //reversed
-                    // measure.TractorNum = truckInfo.Value.TractorNum;
-                    // measure.Egn = truckInfo.Value.Egn;
-                    // measure.Phone = truckInfo.Value.Phone;
-
-                    // //byte[] isoBytes = Encoding.Convert(Encoding.UTF8, Common.srcEncoding, Encoding.UTF8.GetBytes(truckInfo.Value.Driver));
-                    // measure.Driver =
-                    //     //Encoding.UTF8.GetString(
-                    //     truckInfo.Value.Driver
-                    //     //)
-                    //     ;
-
-                    // sb.AppendLine($"{measure.Id};{measure.FromDate.Date.ToString("dd.MM.yyyy")};{measure.TractorNum};" +
-                    //     $"{measure.RegNum};{measure.Driver};{measure.Egn};" +
-                    //     $"{measure.Phone};{measure.Netto}");
+                    File.WriteAllText(planXlxFile.Substring(0, planXlxFile.LastIndexOf('.')) + "-попълнен.csv", sb.ToString(), Common.srcEncoding);
                 }
-                File.WriteAllText(planXlxFile.Substring(0, planXlxFile.LastIndexOf('.')) + "-попълнен.csv", sb.ToString(), Common.srcEncoding);
             }
         }
     }
