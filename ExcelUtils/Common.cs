@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using OfficeOpenXml;
 // using NPOI.XSSF.UserModel;
 // using NPOI.HSSF.UserModel;
 // using NPOI.SS.UserModel;
@@ -70,7 +71,7 @@ namespace ExcelUtils
 
         public static T ReadFromExcel<T>(string path, bool hasHeader = true)
         {
-            using (var excelPack = new OfficeOpenXml.ExcelPackage())
+            using (var excelPack = new ExcelPackage())
             {
                 //Load excel stream
                 using (var stream = File.OpenRead(path))
