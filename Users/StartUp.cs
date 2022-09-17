@@ -62,7 +62,7 @@ namespace BBBUsers
                     StringBuilder sb = new StringBuilder();
                     foreach (var user in users)
                     {
-                        sb.Append($"{user.FirstName} {user.LastName} <{user.Email}>; ");
+                        sb.Append($"{user.FirstName} {user.LastName} {user.Email}" + Environment.NewLine);
                     }
 
                     using (var writer = new StreamWriter(path + "UsersSortedByFirstName.txt"))
@@ -145,10 +145,13 @@ namespace BBBUsers
 
                 writer.Length--;   //remove the last ' ' 
                 writer.Length--;   //remove the last ',' 
-                writer.Append("?subject=Online meetings&body=Hello," + "%0D%0A" + "%0D%0A" +
-                                "Please test our server demo.bigbluebutton.com" + "%0D%0A" + "%0D%0A" +
-                                "Regards," + "%0D%0A" + "%0D%0A" +
-                                "Administrator" + "%0D%0A" +
+                writer.Append("?subject=Онлайн оперативки&body=Здравейте," + "%0D%0A" + "%0D%0A" +
+                                "Моля тествайте нашия нов сървър за онлайн оперативки https://bbb.marica-iztok.com " + "%0D%0A" + "%0D%0A" +
+                                "Потребителското име е Вашия е-мейл, а първоначалната парола е 123456" + "%0D%0A" + "%0D%0A" +
+                                "Поздрави," + "%0D%0A" + "%0D%0A" +
+                                "Златомир Желев " + "%0D%0A" +
+                                "Администратор инф. с-ми, отдел ИТ" + "%0D%0A" +
+                                "тел. 4187, моб. 0887 775597" +
                                 $"\">Email new users {chunks++}<p></a>");
             }
             string footer = "\n</body>\n</html>";
