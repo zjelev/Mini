@@ -12,6 +12,17 @@ namespace WeightNotes
 
             string currentDirectory = Environment.CurrentDirectory + "\\AvtoveznaMonthly";
             var parentDir = Directory.GetParent(currentDirectory).FullName;
+            string todaysNotesFile = Directory.GetFiles("\\\\10.10.10.110\\d$\\Spravki_avtovezna", "*.txt").FirstOrDefault();
+            try
+            {
+                File.Copy(todaysNotesFile, parentDir + Path.DirectorySeparatorChar + DateTime.Now.Date.ToString("yyyy-MM-dd") + ".TXT", true);
+                Console.WriteLine("Справката за деня беше копирана от " + todaysNotesFile);
+            }
+            catch (IOException iox)
+            {
+                Console.WriteLine(iox.Message);
+            }
+            
             string[] weightNotesTxtFiles = Directory.GetFiles(parentDir, "*.txt");
 
             var measures = new List<Measure>();
@@ -51,16 +62,16 @@ namespace WeightNotes
                     else
                     {
                         Console.WriteLine($"Името на файла {Path.GetFileName(note)} не съответства на датата в него. Файлът ще бъде преименуван като датата в него.");
-                        try
-                        {
-                            File.Move(note, parentDir + "\\"
-                            + dailyTrucksInfo.Date.ToString("yyyy-MM-dd") + ".TXT");
-                        }
-                        catch (IOException)
-                        {
-                            Console.WriteLine("Изтрийте файла с днешна дата.");
-                            File.Delete(parentDir + "\\" + dailyTrucksInfo.Date.ToString("yyyy-MM-dd") + ".TXT");
-                        }
+                        // try
+                        // {
+                        //     File.Move(note, parentDir + "\\"
+                        //     + dailyTrucksInfo.Date.ToString("yyyy-MM-dd") + ".TXT");
+                        // }
+                        // catch (IOException)
+                        // {
+                        //     Console.WriteLine("Изтрийте файла с днешна дата.");
+                        //     File.Delete(parentDir + "\\" + dailyTrucksInfo.Date.ToString("yyyy-MM-dd") + ".TXT");
+                        // }
 
                     }
 
