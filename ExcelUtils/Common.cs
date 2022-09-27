@@ -139,5 +139,47 @@ namespace ExcelUtils
 
             return regNum;
         }
+
+        public static bool FilesMatch(string path1, string path2)
+        {
+            if (File.Exists(path2))
+            {
+                using (FileStream fs1 = new FileStream(path1, FileMode.Open),
+                  fs2 = new FileStream(path2, FileMode.Open))
+                {
+                    int c1 = 0, c2 = 0;
+                    do
+                    {
+                        c1 = fs1.ReadByte();
+                        c2 = fs2.ReadByte();
+                    }
+                    while (c1 == c2 && c1 != -1 && c2 != -1);
+
+                    if (c1 != c2)
+                    {
+                        Console.WriteLine("Files are different:");
+                        // var file1Lines = File.ReadLines(path1);
+                        // var file2Lines = File.ReadLines(path2);
+                        // IEnumerable<String> inFirstNotInSecond = file1Lines.Except(file2Lines);
+                        // IEnumerable<String> inSecondNotInFirst = file2Lines.Except(file1Lines);
+
+                        // Console.WriteLine($"-----In {path1} not in {path2}-----:");
+                        // foreach (var line in inFirstNotInSecond)
+                        // {
+                        //     Console.WriteLine(line);
+                        // }
+                        // Console.WriteLine($"-----In {path2} not in {path1}-----:");
+                        // foreach (var line in inSecondNotInFirst)
+                        // {
+                        //     Console.WriteLine(line);
+                        // }
+                        return false;
+                    }
+                    Console.WriteLine("Files match");
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 }
