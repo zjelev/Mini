@@ -48,6 +48,8 @@ namespace WeightNotes
         public string Egn { get; set; }
         public string Phone { get; set; }
 
+        public bool IsPlanned { get; set; } = false;
+
         public override string ToString()
         {
             return $"{this.Id} ; {this.ProtokolNum} ; {this.FromDate.ToString("dd/MM/yy", CultureInfo.InvariantCulture)} ; {this.RegNum} ;"
