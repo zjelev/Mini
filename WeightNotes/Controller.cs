@@ -178,7 +178,7 @@ namespace WeightNotes
             return measures;
         }
 
-        internal static Dictionary<(DateTime, string), Measure> MapMeasuresToPlan(string xlsFile)
+        internal static Dictionary<(DateTime, string), Measure> GetPlannedTrucks(string xlsFile)
         {
             var tables = Common.ReadFromExcel<List<DataTable>>(xlsFile);
             var trucksMapped = new Dictionary<(DateTime, string), Measure>();
@@ -217,6 +217,51 @@ namespace WeightNotes
                 }
             }
             return trucksMapped;
+        }
+
+        internal static Dictionary<string, Dictionary<string, Measure>> GetPlannedTrucksDaily(string xlsFile)
+        {
+            var worksheets = Common.ReadFromExcel<List<DataTable>>(xlsFile);
+            Dictionary<string, Dictionary<string, Measure>> trucksPlannedThisMonth = new Dictionary<string, Dictionary<string, Measure>>();
+
+            foreach(var ws in worksheets)
+            {
+                var trucksPlannedThisDay = new Dictionary<string, Measure>();
+
+                foreach (DataRow dataRow in ws.Rows)
+                {
+                    //foreach (var item in dataRow.ItemArray)
+                    Measure truckDetails = new Measure();
+                    try
+                    {
+                        truckDetails = new Measure(
+                            String.IsNullOrEmpty(dataRow.Field<string>("№")) ? 0 : int.Parse(dataRow.Field<string>("№")),
+                            dataRow.Field<string>("ВЛЕКАЧ").Replace(" ", string.Empty).Replace("-", string.Empty),
+                            dataRow.Field<string>("РЕМАРКЕ").Replace(" ", string.Empty).Replace("-", string.Empty),
+                            dataRow.Field<string>("ШОФЬОР"),
+                            dataRow.Field<string>("ЕГН"),
+                            dataRow.Field<string>("ТЕЛЕФОН"),
+                            DateTime.ParseExact(ws.TableName, "d.M", CultureInfo.InvariantCulture)
+                            );
+                    }
+                    catch (NullReferenceException nre)
+                    {
+                        Console.WriteLine(nre.Message);
+                    }
+
+                    if (trucksPlannedThisDay.ContainsKey(truckDetails.RegNum))
+                    {
+                        Console.WriteLine($"Ремарке с № {truckDetails.RegNum} е планирано повече от 1 път за {truckDetails.FromDate.Date.ToString("dd.M.yyyy")}");
+                    }
+                    else
+                    {
+                        trucksPlannedThisDay.Add(truckDetails.RegNum, truckDetails);
+                    }
+                }
+
+                trucksPlannedThisMonth.Add(ws.TableName, trucksPlannedThisDay);
+            }
+            return trucksPlannedThisMonth;
         }
     }
 }
