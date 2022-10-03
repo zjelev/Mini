@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using ExcelUtils;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace WeightNotes
 {
@@ -172,6 +173,7 @@ namespace WeightNotes
                         foreach (var sheet in speditorDailySheets)
                         {
                             ExcelWorksheet ws = package.Workbook.Worksheets.Add(sheet.Key);
+
                             ws.DefaultRowHeight = 15;
                             ws.Column(1).Width = 3;
                             ws.Column(2).Width = 11;
@@ -227,8 +229,22 @@ namespace WeightNotes
                                 dataTable.Rows.Add(measure.Id, measure.TractorNum, measure.RegNum,
                                             measure.Driver, measure.Egn, measure.Phone, measure.Netto);
                             }
+
                             //add all the content from the DataTable, starting at cell A1
                             ws.Cells["A1"].LoadFromDataTable(dataTable, true);
+
+                            for (int col = 1; col <= dataTable.Columns.Count; col++)
+                            {
+                                for (int row = 1; row <= dataTable.Rows.Count + 1; row++)
+                                {
+                                    ws.Cells[row, col].Style.Fill.PatternType = ExcelFillStyle.LightGrid;
+                                    ws.Cells[row, col].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.White);
+                                    ws.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                                    ws.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                                    ws.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                                    ws.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                                }
+                            }
                         }
                         package.Save();
                     }

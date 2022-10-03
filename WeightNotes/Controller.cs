@@ -132,8 +132,6 @@ namespace WeightNotes
                 //add all the content from the DataTable, starting at cell A1
                 ws.Cells["A5"].LoadFromDataTable(dataTable, true);
 
-                int rows = dataTable.Rows.Count;
-                int columns = dataTable.Columns.Count;
                 //worksheet.Cells[2, 1, rows + 1, columns].Sort(new[] { 0, 1 }); // skip the header
                 package.Save();
             }
