@@ -1,5 +1,5 @@
-
 {
+    "_comment": "To avoid Exception in Debug: Connection properties can not be changed after a connection is established",
     "FormattingOptions": {
         "NewLinesForBracesInLambdaExpressionBody": false,
         "NewLinesForBracesInAnonymousMethods": false,

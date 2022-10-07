@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using Common;
 // using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
 
@@ -86,7 +87,6 @@ namespace DbUtils {
                 // } else Console.WriteLine(bakFile + " not found. Can not be deleted");
 
                 // TransferDB(srv, srv, dbName);
-                // Console.WriteLine($"{dbName} database transferred in {sw.ElapsedMilliseconds} ms.");
 
                 srv.ConnectionContext.Disconnect();
 
@@ -97,19 +97,17 @@ namespace DbUtils {
                     + DateTime.Now.ToString("yyyy'-'MM'-'dd_HH'_'mm") + ".zip";
                 
                 ZipFile.CreateFromDirectory(tempDir, zipPath);
+                Console.WriteLine($"Bak file zipped to {zipPath}. ");
 
-                Console.WriteLine("Bak file zipped. Deleting it.");
                 File.Delete(bakFile);
-
-                // Console.WriteLine("Press any key...");
-                // Console.ReadKey();
+                Console.Write($"{bakFile} deleted.");
 
             } catch (IOException ioExp) {
-                Console.WriteLine(ioExp.Message);
+                TextFile.Log(ioExp.Message);
             } catch (FailedOperationException fop) {
-                Console.WriteLine(fop.ToString());
+                TextFile.Log(fop.ToString());
             } catch (Exception e) {
-                Console.WriteLine(e.Message);
+                TextFile.Log(e.Message);
             }
         }
 
@@ -178,6 +176,7 @@ namespace DbUtils {
 
             //Remove the backup device from the Backup object.           
             backup.Devices.Remove(deviceItem);
+            TextFile.Log($"{dbName} backed up to {bakFile}");
         }
 
         private static void RestoreDB(Server srv, string dbName, string bakFile) {
@@ -211,6 +210,7 @@ namespace DbUtils {
              * You can also use SqlRestoreAsync method to perform restore 
              * operation asynchronously */
             restore.SqlRestore(srv);
+            TextFile.Log($"{bakFile} restored to {dbName}");
         }
 
         private static void TransferDB(Server srcSrv, Server destSrv, string dbName) {
@@ -230,6 +230,7 @@ namespace DbUtils {
             //Script the transfer. Alternatively perform immediate data transfer with TransferData method.   
             //xfr.ScriptTransfer();
             xfr.TransferData();
+            TextFile.Log($"{dbName} transferred from {srcSrv} to {destSrv}");
         }
 
         public static void Create7Zip(string source, string target) {
@@ -239,7 +240,7 @@ namespace DbUtils {
             p.WindowStyle = ProcessWindowStyle.Hidden;
             Process x = Process.Start(p);
             x.WaitForExit();
-            Console.WriteLine();
+            TextFile.Log($"{source} 7zipped to {target}");
         }
 
         // private static void CompletionStatusInPercent(object sender, PercentCompleteEventArgs args) {
