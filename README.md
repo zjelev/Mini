@@ -22,5 +22,5 @@ Collects the materials SAP No., name, etc. from file Материали-*.xls? a
 
 # WeightNotes
 Търси *.txt файлове в горната директория и: 1) сумира полетата Всичко Нето във файла Справка по дни.xlsx 2) Събира редовете от всички файлове във Всички m.{Month}.csv.
-3) Maps planned trucks to actual.
+3) Maps planned trucks to actual. 4) Sends emails
 
