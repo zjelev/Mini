@@ -1,6 +1,6 @@
 using System.Data;
 using System.Globalization;
-using ExcelUtils;
+using Common;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
@@ -10,7 +10,7 @@ namespace WeightNotes
     {
         public static DailyTrucksGeologInfo GetTotalForTheDay(string note)
         {
-            string[] lines = File.ReadAllLines(note, Common.srcEncoding);
+            string[] lines = File.ReadAllLines(note, Excel.srcEncoding);
             string supplier = lines[0].Trim();
             string header = lines[1].Trim();
             string periodTemp = lines[3].Trim();
@@ -139,7 +139,7 @@ namespace WeightNotes
 
         internal static List<Measure> GetMeasures(string file)
         {
-            string[] lines = File.ReadAllLines(file, Common.srcEncoding);
+            string[] lines = File.ReadAllLines(file, Excel.srcEncoding);
             int headerLineNum = 5;
             do
             {
@@ -178,7 +178,7 @@ namespace WeightNotes
 
         internal static Dictionary<(DateTime, string), Measure> GetPlannedTrucks(string xlsFile)
         {
-            var tables = Common.ReadFromExcel<List<DataTable>>(xlsFile);
+            var tables = Excel.ReadFromExcel<List<DataTable>>(xlsFile);
             var trucksMapped = new Dictionary<(DateTime, string), Measure>();
 
             foreach (var table in tables)
@@ -219,7 +219,7 @@ namespace WeightNotes
 
         internal static Dictionary<string, Dictionary<string, Measure>> GetPlannedTrucksDaily(string xlsFile)
         {
-            var worksheets = Common.ReadFromExcel<List<DataTable>>(xlsFile);
+            var worksheets = Excel.ReadFromExcel<List<DataTable>>(xlsFile);
             Dictionary<string, Dictionary<string, Measure>> trucksPlannedThisMonth = new Dictionary<string, Dictionary<string, Measure>>();
 
             foreach(var ws in worksheets)
@@ -234,8 +234,8 @@ namespace WeightNotes
                     {
                         truckDetails = new Measure(
                             String.IsNullOrEmpty(dataRow.Field<string>("№")) ? 0 : int.Parse(dataRow.Field<string>("№")),
-                            dataRow.Field<string>("ВЛЕКАЧ").Replace(" ", string.Empty).Replace("-", string.Empty),
-                            dataRow.Field<string>("РЕМАРКЕ").Replace(" ", string.Empty).Replace("-", string.Empty),
+                            TextFile.ReplaceCyrillic(dataRow.Field<string>("ВЛЕКАЧ").Replace(" ", string.Empty).Replace("-", string.Empty).ToUpper().Trim()),
+                            TextFile.ReplaceCyrillic(dataRow.Field<string>("РЕМАРКЕ").Replace(" ", string.Empty).Replace("-", string.Empty).ToUpper().Trim()),
                             dataRow.Field<string>("ШОФЬОР"),
                             dataRow.Field<string>("ЕГН"),
                             dataRow.Field<string>("ТЕЛЕФОН"),
