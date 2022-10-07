@@ -3,8 +3,6 @@ using Microsoft.SqlServer.Management.Smo;
 
 namespace DbUtils {
     public class CreateDB {
-        private string conn;
-        private string dbName;
         private static string createTables = @"
             CREATE TABLE Countries (Id INT PRIMARY KEY IDENTITY,Name VARCHAR(50))
             CREATE TABLE Towns(Id INT PRIMARY KEY IDENTITY,Name VARCHAR(50), CountryCode INT FOREIGN KEY REFERENCES Countries(Id))
@@ -21,23 +19,17 @@ namespace DbUtils {
             INSERT INTO MinionsVillains (MinionId, VillainId) VALUES (4,2),(1,1),(5,7),(3,5),(2,6),(11,5),(8,4),(9,7),(7,1),(1,3),(7,3),(5,3),(4,3),(1,2),(2,1),(2,7)";
 
         public CreateDB(string conn, string dbName) {
-            this.conn = $"Server = {conn}; Integrated security = true";
-            this.dbName = dbName;
-            string createDB = $"CREATE DATABASE {dbName}";
-            string useDB = $"USE {dbName}";
 
-            // todo: wrap every ConnectionManager and SqlTransaction in using {}
-
-            using SqlConnection dbConn = new SqlConnection(this.conn);
+            using SqlConnection dbConn = new SqlConnection($"Server = {conn}; Integrated security = true");
             dbConn.Open();
             var dbExists = new Server().Databases.Contains(dbName);
 
             SqlCommand command;
             if (!dbExists) {
-                command = new SqlCommand(createDB, dbConn);
+                command = new SqlCommand($"CREATE DATABASE {dbName}", dbConn);
                 command.ExecuteScalar();
 
-                command = new SqlCommand(useDB, dbConn);
+                command = new SqlCommand($"USE {dbName}", dbConn);
                 command.ExecuteScalar();
 
                 command = new SqlCommand(createTables, dbConn);
