@@ -1,5 +1,6 @@
 using System.Data;
 using System.Globalization;
+using Common;
 
 namespace MaterialsPlanning
 {
@@ -27,7 +28,7 @@ namespace MaterialsPlanning
                     }
                     catch (NullReferenceException nre)
                     {
-                        Console.WriteLine(nre.Message);
+                        TextFile.Log(nre.Message);
                     }
 
                     if (materials.ContainsKey(material.SapNum))
@@ -96,11 +97,10 @@ namespace MaterialsPlanning
                             materials[sapNum].PriceLastContract = lastContractForMaterial[sapNum].PriceLastContract;
                         }
                     }
-
                 }
                 catch (NullReferenceException nre)
                 {
-                    Console.WriteLine(nre.Message);
+                    TextFile.Log(nre.Message);
                 }
             }
         }
@@ -136,7 +136,7 @@ namespace MaterialsPlanning
                 }
                 catch (NullReferenceException nre)
                 {
-                    Console.WriteLine(nre.Message);
+                    TextFile.Log(nre.Message);
                 }
             }
         }
@@ -174,10 +174,9 @@ namespace MaterialsPlanning
                 }
                 catch (NullReferenceException nre)
                 {
-                    Console.WriteLine(nre.Message);
+                    TextFile.Log(nre.Message);
                 }
             }
         }
-        
     }
 }
