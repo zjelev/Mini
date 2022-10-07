@@ -1,5 +1,5 @@
 using System.Data;
-using ExcelUtils;
+using Common;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
@@ -11,7 +11,7 @@ namespace CodeSums
         {
             string fileName, month, podName, podNumberStr;
             int year;
-            Common.GetHeaderFromLeon(file, out fileName, out year, out month, out podName, out podNumberStr);
+            TextFile.GetHeaderFromLeon(file, out fileName, out year, out month, out podName, out podNumberStr);
 
             using (ExcelPackage package = new ExcelPackage(new FileInfo(file)))
             {
