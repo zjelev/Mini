@@ -176,47 +176,6 @@ namespace WeightNotes
             return measures;
         }
 
-        internal static Dictionary<(DateTime, string), Measure> GetPlannedTrucks(string xlsFile)
-        {
-            var tables = Excel.ReadFromExcel<List<DataTable>>(xlsFile);
-            var trucksMapped = new Dictionary<(DateTime, string), Measure>();
-
-            foreach (var table in tables)
-            {
-                foreach (DataRow dataRow in table.Rows)
-                {
-                    //foreach (var item in dataRow.ItemArray)
-                    Measure truckDetails = new Measure();
-                    try
-                    {
-                        truckDetails = new Measure(
-                            String.IsNullOrEmpty(dataRow.Field<string>("№")) ? 0 : int.Parse(dataRow.Field<string>("№")),
-                            dataRow.Field<string>("ВЛЕКАЧ").Replace(" ", string.Empty).Replace("-", string.Empty),
-                            dataRow.Field<string>("РЕМАРКЕ").Replace(" ", string.Empty).Replace("-", string.Empty),
-                            dataRow.Field<string>("ШОФЬОР"),
-                            dataRow.Field<string>("ЕГН"),
-                            dataRow.Field<string>("ТЕЛЕФОН"),
-                            DateTime.ParseExact(table.TableName, "d.M.yyyy", CultureInfo.InvariantCulture)
-                            );
-                    }
-                    catch (NullReferenceException nre)
-                    {
-                        Console.WriteLine(nre.Message);
-                    }
-
-                    if (trucksMapped.ContainsKey((truckDetails.FromDate, truckDetails.RegNum)))
-                    {
-                        Console.WriteLine($"Ремарке с № {truckDetails.RegNum} е планирано повече от 1 път за {truckDetails.FromDate.Date.ToString("dd.M.yyyy")}");
-                    }
-                    else
-                    {
-                        trucksMapped.Add((truckDetails.FromDate, truckDetails.RegNum), truckDetails);
-                    }
-                }
-            }
-            return trucksMapped;
-        }
-
         internal static Dictionary<string, Dictionary<string, Measure>> GetPlannedTrucksDaily(string xlsFile)
         {
             var worksheets = Excel.ReadFromExcel<List<DataTable>>(xlsFile);
