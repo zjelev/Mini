@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 
 namespace WeightNotes
@@ -9,9 +8,9 @@ namespace WeightNotes
         {
             
         }
-        public Measure(int id, string tractorNum, string regNum, string driver, string egn, string phone, DateTime fromDate  )
+        public Measure(int protokolNum, string tractorNum, string regNum, string driver, string egn, string phone, DateTime fromDate  )
         {
-            this.Id = id;
+            this.ProtokolNum = protokolNum;
             this.TractorNum = tractorNum;
             this.RegNum = regNum;
             this.Driver = driver;
