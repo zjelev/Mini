@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using Common;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -13,9 +14,9 @@ namespace WeightNotes
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var config = File.ReadAllText("config.json");
-            string veznaHost = System.Text.Json.JsonSerializer.Deserialize<Config>(config)?.Vezna.Host;
-            string veznaPath = System.Text.Json.JsonSerializer.Deserialize<Config>(config)?.Vezna.Path;
-            string veznaFile = System.Text.Json.JsonSerializer.Deserialize<Config>(config)?.Vezna.File;
+            string veznaHost = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Host;
+            string veznaPath = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Path;
+            string veznaFile = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.File;
 
             string todaysFile = Directory.GetFiles($"\\\\{veznaHost}\\{veznaPath}", veznaFile).FirstOrDefault();
             DailyTrucksGeologInfo dailyNote = Controller.GetTotalForTheDay(todaysFile);
@@ -122,7 +123,7 @@ namespace WeightNotes
 
             #region Попълва файла от спедиторите
 
-            string file = System.Text.Json.JsonSerializer.Deserialize<Config>(config)?.Speditor.File;
+            string file = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Speditor.File;
             string? planXlxFile = Directory.GetFiles(Environment.CurrentDirectory, file).Where(name => !name.Contains("попълнен")).FirstOrDefault();
 
             if (planXlxFile != null)
@@ -146,7 +147,7 @@ namespace WeightNotes
                         ExcelWorksheet ws = package.Workbook.Worksheets.Add(sheet.Key);
 
                         ws.DefaultRowHeight = 15;
-                        ws.Column(1).Width = 3;
+                        ws.Column(1).Width = 5;
                         ws.Column(2).Width = 11;
                         ws.Column(3).Width = 11;
                         ws.Column(4).Width = 30;
@@ -172,14 +173,14 @@ namespace WeightNotes
                         {
                             try
                             {
-                                sheet.Value[truckInfo.Key].Id = 0;
+                                sheet.Value[truckInfo.Key].ProtokolNum = 0;
 
                                 foreach (var measure in measuresCurrentDay)
                                 {
                                     if (TextFile.ReplaceCyrillic(measure.RegNum.ToUpper().Trim()) == truckInfo.Key)
                                     {
                                         sheet.Value[truckInfo.Key].Netto = measure.Netto;
-                                        sheet.Value[truckInfo.Key].Id = measure.Id;
+                                        sheet.Value[truckInfo.Key].ProtokolNum = measure.ProtokolNum;
                                         measuresCurrentDay.Remove(measure);
                                         break;
                                     }
@@ -189,13 +190,13 @@ namespace WeightNotes
                             {
                                 body.AppendLine($"{ws.Name} - No. {++knfeCounter}: {knfe.Message}");
                             }
-                            dataTable.Rows.Add(truckInfo.Value.Id, truckInfo.Value.TractorNum, truckInfo.Key,
+                            dataTable.Rows.Add(truckInfo.Value.ProtokolNum, truckInfo.Value.TractorNum, truckInfo.Key,
                                         truckInfo.Value.Driver, truckInfo.Value.Egn, truckInfo.Value.Phone, truckInfo.Value.Netto);
                         }
 
                         foreach (var measure in measuresCurrentDay)
                         {
-                            dataTable.Rows.Add(measure.Id, measure.TractorNum, measure.RegNum,
+                            dataTable.Rows.Add(measure.ProtokolNum, measure.TractorNum, measure.RegNum,
                                         measure.Driver, measure.Egn, measure.Phone, measure.Netto);
                         }
 
