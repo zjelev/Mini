@@ -11,7 +11,7 @@ SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
 ;#HotkeyModifierTimeout 100
 
 ; #IfWinExist Untitled - Notepad
-^q::
+;^q::
     ; MyString := "Hey"
     ; MyNumber := 7
     ; MyString2 := "how are you?"
@@ -65,22 +65,27 @@ SetWorkingDir %A_ScriptDir% ; Ensures a consistent starting directory.
     ; web_browser.document.getElementByID("login").submit()
 
     ; ;
-    path := "D:\Documents\repo\MiniUtils\AutoHotkey\New WorkSheet.xlsx"
-    ; FileSelectFile, path
-    ex := ComObjCreate("Excel.Application")
-    ex.visible := True
-    ; ex.Workbooks.Add
-    ex.Workbooks.Open(path)
+    ; path := "D:\Documents\repo\MiniUtils\AutoHotkey\New WorkSheet.xlsx"
+    ; ; FileSelectFile, path
+    ; ex := ComObjCreate("Excel.Application")
+    ; ex.visible := True
+    ; ; ex.Workbooks.Add
+    ; ex.Workbooks.Open(path)
 
-    ex := ComObjActive("Excel.Application")
-    myVar := "Hey Hey"
-    ex.Range("c2").Value := myVar
-    while (ex.Range("D" . A_Index).Value != "")
-    {
-        ex.Range("D" . A_Index).Value := "New Value"
-    }
+    ; ex := ComObjActive("Excel.Application")
+    ; myVar := "Hey Hey"
+    ; ex.Range("c2").Value := myVar
+    ; while (ex.Range("D" . A_Index).Value != "")
+    ; {
+    ;     ex.Range("D" . A_Index).Value := "New Value"
+    ; }
 
-    ex.Range("C2").Copy
-    ex.ActiveWorkbook.SaveAs("D:\Documents\repo\MiniUtils\AutoHotkey\New WorkSheet2.xlsx")
+    ; ex.Range("C2").Copy
+    ; ex.ActiveWorkbook.SaveAs("D:\Documents\repo\MiniUtils\AutoHotkey\New WorkSheet2.xlsx")
+
+    arr := [ "AutoHotKey", "Run", "shell:startup:", "shell:common startup"]
+    :*:rpa::
+    Random, MyVar, 1, 4
+    sendinput % arr[MyVar]
 
 return
