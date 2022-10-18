@@ -36,7 +36,22 @@ namespace WeightNotes
 
             string condition = lines[4].Trim();
 
-            int totalLineNum = 5;
+            int firstMeasureLineNum = 5;
+            while (!lines[firstMeasureLineNum].StartsWith(" |--------"))
+            {
+                firstMeasureLineNum++;
+            }
+
+            int lastMeasureLineNum = firstMeasureLineNum++;
+            
+            do
+            {
+                lastMeasureLineNum++;
+            }
+            while (!(lines[lastMeasureLineNum].StartsWith(" |--------")) && !(lines[lastMeasureLineNum].StartsWith(" +---------")));
+
+            int totalLineNum = --lastMeasureLineNum;
+
             while (!lines[totalLineNum].StartsWith(" | ВСИЧКО:"))
             {
                 totalLineNum++;
@@ -46,13 +61,12 @@ namespace WeightNotes
                 StringSplitOptions.RemoveEmptyEntries), cl => cl.Trim());
             int totalNet = int.Parse(total[total.Length - 1]);
 
-            int lastMeasureLineNum = totalLineNum - 2;
-            string[] lastMeasure = new string[] { };
+            // string[] lastMeasure = new string[] { };
 
-            while (lastMeasure.Length != 10)
-            {
-                lastMeasure = Array.ConvertAll(lines[lastMeasureLineNum--].Split('|', StringSplitOptions.RemoveEmptyEntries), cl => cl.Trim());
-            }
+            // while (lastMeasure.Length != 10)
+            // {
+            //     lastMeasure = Array.ConvertAll(lines[totalLineNum--].Split('|', StringSplitOptions.RemoveEmptyEntries), cl => cl.Trim());
+            // }
             string noteFileName = Path.GetFileName(note);
             int shift = 1;
             if (noteFileName.Length == 16)
@@ -60,7 +74,7 @@ namespace WeightNotes
                 shift = int.Parse(noteFileName.Substring(noteFileName.Length - 5, 1));
                 shift = shift > 2 ? 1 : shift;
             }
-            DailyTrucksGeologInfo dailyTrucksInfo = new DailyTrucksGeologInfo(fromDate, shift, totalNet / 1000.0m, int.Parse(lastMeasure[1]));
+            DailyTrucksGeologInfo dailyTrucksInfo = new DailyTrucksGeologInfo(fromDate, shift, totalNet / 1000.0m, lastMeasureLineNum - firstMeasureLineNum + 1);
 
             return dailyTrucksInfo;
         }
@@ -151,6 +165,8 @@ namespace WeightNotes
             List<Measure> measures = new List<Measure>();
             int measuresLineNum = headerLineNum + 2;
 
+            int numForTheDay = 0;
+            
             while (measuresLineNum < lines.Length - 1)
             {
                 string[] currentLine = Array.ConvertAll(lines[measuresLineNum].Split("|"), cl => cl.Trim());
@@ -159,7 +175,7 @@ namespace WeightNotes
                 if (!(lines[measuresLineNum].StartsWith(" | N ")) && lineLength == 11)
                 {
                     Measure measure = new Measure(
-                            int.Parse(currentLine[1]),
+                            ++numForTheDay,
                             int.Parse(currentLine[2]),
                             DateTime.ParseExact(currentLine[3], "dd/MM/yy", CultureInfo.InvariantCulture),
                             currentLine[4],
