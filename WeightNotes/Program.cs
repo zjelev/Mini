@@ -61,8 +61,9 @@ namespace WeightNotes
             }
 
             var dailyWeights = new Dictionary<(int, int), DailyTrucksGeologInfo>();
+            int days = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
 
-            for (int day = 1; day <= 31; day++)
+            for (int day = 1; day <= days; day++)
             {
                 for (int shift = 1; shift <= 2; shift++)
                 {
@@ -109,17 +110,55 @@ namespace WeightNotes
                 last.FromDate.ToString("dd/MM/yy ", CultureInfo.InvariantCulture) + last.BrutoHour);
             Console.WriteLine("Файлът Справка по дни.xlsx беше обновен.");
 
+            StringBuilder missingProtokols = new StringBuilder();
+            missingProtokols.AppendLine("Дата;Номер");
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("N ; Протокол; От дата ; Рег.номер ; Бруто ; Бруто час ; Тара ; Тара час ; Нето");
+            int firstProtokolNum = measures.FirstOrDefault().ProtokolNum;
+            int countProtokolNum = firstProtokolNum - 1;
             foreach (var measure in measures)
             {
                 sb.AppendLine(measure.ToString());
+                countProtokolNum++;
+                if (measure.ProtokolNum != countProtokolNum)
+                {
+                    while (measure.ProtokolNum != countProtokolNum)
+                    {
+                        Measure missingMeasure = new Measure() { ProtokolNum = countProtokolNum, FromDate = measure.FromDate };
+                        missingProtokols.AppendLine($"{missingMeasure.FromDate.ToString("dd.MM.yyyy")};{countProtokolNum}");
+                        countProtokolNum++;
+                    }
+                }
             }
             string allMeasuresFile = Environment.CurrentDirectory + "\\Всички м." + month + ".csv";
             File.WriteAllText(allMeasuresFile, sb.ToString(), Excel.srcEncoding);
             Console.WriteLine($"Файлът {allMeasuresFile.Substring(allMeasuresFile.LastIndexOf('\\') + 1, allMeasuresFile.Length - allMeasuresFile.LastIndexOf('\\') - 1)} беше обновен.");
 
+            string missingMeasuresFile = "Липсващи бележки.csv";
+            File.WriteAllText(missingMeasuresFile, missingProtokols.ToString(), Excel.srcEncoding);
+            string lastMissingProtokol = missingProtokols.Remove(0, missingProtokols.Length - 17).ToString().Substring(0, 10);
+            // int lastMissingProtokolDay = int.Parse(lastMissingProtokol.Substring(0, 2));
+            // int lastMissingProtokolMonth = int.Parse(lastMissingProtokol.Substring(3, 2));
+            // int lastMissingProtokolYear = int.Parse(lastMissingProtokol.Substring(6, 4));
+            // DateTime lastMissingProtokolDate = new DateTime(lastMissingProtokolYear, lastMissingProtokolMonth, lastMissingProtokolDay);
+
+            if (DateTime.Now.Date.ToString("dd.MM.yyyy").Equals(lastMissingProtokol) && args.Length == 2)
+            {
+                try
+                {
+                    string passwd = args[0];
+                    string senderName = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Name;
+                    Email.Send(passwd, args[1], new List<string>(),
+                        "Липсващи кантарни бележки за месеца", "Поздрави,\n"+senderName, new string[] { missingMeasuresFile });
+                    TextFile.Log("Изпратена справка за липсващи бележки");
+                }
+                catch (System.Exception e)
+                {
+                    TextFile.Log(e.Message);
+                }
+
+            }
 
             #region Попълва файла от спедиторите
 
