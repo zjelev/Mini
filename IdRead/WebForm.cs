@@ -15,19 +15,19 @@ namespace IdRead
                 string pass = Email.ReadHidePassword();
 
                 // add your chromedriver.exe path here
-                ChromeDriver driver = new ChromeDriver(Environment.CurrentDirectory);
+                ChromeDriver driver = new ChromeDriver(Directory.GetParent((Directory.GetParent(Environment.CurrentDirectory))?.ToString())?.ToString());
 
                 //Maximize your browser size
                 driver.Manage().Window.Maximize();
 
                 //Add your MVC project URL
                 var config = File.ReadAllText("..\\WeightNotes\\config.json");
-                string host = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Host;
-                string server = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Domain;
+                string? host = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Host;
+                string? server = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Domain;
                 driver.Navigate().GoToUrl("https://web" + host + "." + server);
 
                 //Add your textbox id
-                string account = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Account;
+                string? account = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Account;
                 driver.FindElement(By.Id("rcmloginuser")).SendKeys(account);
                 driver.FindElement(By.Id("rcmloginpwd")).SendKeys(pass);
 
@@ -54,7 +54,7 @@ namespace IdRead
             }
             catch (Exception ex)
             {
-                throw;
+                TextFile.Log(ex.Message);
             }
         }
     }

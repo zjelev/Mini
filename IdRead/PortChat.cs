@@ -5,12 +5,12 @@ namespace IdRead
     public class PortChat
     {
         static bool _continue;
-        static SerialPort _serialPort;
+        static SerialPort? _serialPort;
 
         public static void Start()
         {
-            string name;
-            string message;
+            string? name;
+            string? message;
             StringComparer stringComparer = StringComparer.OrdinalIgnoreCase;
             Thread readThread = new Thread(Read);
 
@@ -63,7 +63,7 @@ namespace IdRead
             {
                 try
                 {
-                    string message = _serialPort.ReadLine();
+                    string? message = _serialPort?.ReadLine();
                     Console.WriteLine(message);
                 }
                 catch (TimeoutException) { }
@@ -73,7 +73,7 @@ namespace IdRead
         // Display Port values and prompt user to enter a port.
         public static string SetPortName(string defaultPortName)
         {
-            string portName;
+            string? portName;
 
             Console.WriteLine("Available Ports:");
             foreach (string s in SerialPort.GetPortNames())
@@ -84,7 +84,7 @@ namespace IdRead
             Console.Write("Enter COM port value (Default: {0}): ", defaultPortName);
             portName = Console.ReadLine();
 
-            if (portName == "" || !(portName.ToLower()).StartsWith("com"))
+            if (portName == "" || !(portName!.ToLower()).StartsWith("com"))
             {
                 portName = defaultPortName;
             }
@@ -93,7 +93,7 @@ namespace IdRead
         // Display BaudRate values and prompt user to enter a value.
         public static int SetPortBaudRate(int defaultPortBaudRate)
         {
-            string baudRate;
+            string? baudRate;
 
             Console.Write("Baud Rate(default:{0}): ", defaultPortBaudRate);
             baudRate = Console.ReadLine();
@@ -103,13 +103,13 @@ namespace IdRead
                 baudRate = defaultPortBaudRate.ToString();
             }
 
-            return int.Parse(baudRate);
+            return int.Parse(baudRate!);
         }
 
         // Display PortParity values and prompt user to enter a value.
         public static Parity SetPortParity(Parity defaultPortParity)
         {
-            string parity;
+            string? parity;
 
             Console.WriteLine("Available Parity options:");
             foreach (string s in Enum.GetNames(typeof(Parity)))
@@ -125,12 +125,12 @@ namespace IdRead
                 parity = defaultPortParity.ToString();
             }
 
-            return (Parity)Enum.Parse(typeof(Parity), parity, true);
+            return (Parity)Enum.Parse(typeof(Parity), parity!, true);
         }
         // Display DataBits values and prompt user to enter a value.
         public static int SetPortDataBits(int defaultPortDataBits)
         {
-            string dataBits;
+            string? dataBits;
 
             Console.Write("Enter DataBits value (Default: {0}): ", defaultPortDataBits);
             dataBits = Console.ReadLine();
@@ -140,13 +140,13 @@ namespace IdRead
                 dataBits = defaultPortDataBits.ToString();
             }
 
-            return int.Parse(dataBits.ToUpperInvariant());
+            return int.Parse(dataBits!.ToUpperInvariant());
         }
 
         // Display StopBits values and prompt user to enter a value.
         public static StopBits SetPortStopBits(StopBits defaultPortStopBits)
         {
-            string stopBits;
+            string? stopBits;
 
             Console.WriteLine("Available StopBits options:");
             foreach (string s in Enum.GetNames(typeof(StopBits)))
@@ -163,11 +163,11 @@ namespace IdRead
                 stopBits = defaultPortStopBits.ToString();
             }
 
-            return (StopBits)Enum.Parse(typeof(StopBits), stopBits, true);
+            return (StopBits)Enum.Parse(typeof(StopBits), stopBits!, true);
         }
         public static Handshake SetPortHandshake(Handshake defaultPortHandshake)
         {
-            string handshake;
+            string? handshake;
 
             Console.WriteLine("Available Handshake options:");
             foreach (string s in Enum.GetNames(typeof(Handshake)))
@@ -183,7 +183,7 @@ namespace IdRead
                 handshake = defaultPortHandshake.ToString();
             }
 
-            return (Handshake)Enum.Parse(typeof(Handshake), handshake, true);
+            return (Handshake)Enum.Parse(typeof(Handshake), handshake!, true);
         }
     }
 }
