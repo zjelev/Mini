@@ -208,12 +208,12 @@ namespace WeightNotes
                     try
                     {
                         truckDetails = new Measure(
-                            String.IsNullOrEmpty(dataRow.Field<string>("№")) ? 0 : int.Parse(dataRow.Field<string>("№")),
-                            TextFile.ReplaceCyrillic(dataRow.Field<string>("ВЛЕКАЧ").Replace(" ", string.Empty).Replace("-", string.Empty).ToUpper().Trim()),
-                            TextFile.ReplaceCyrillic(dataRow.Field<string>("РЕМАРКЕ").Replace(" ", string.Empty).Replace("-", string.Empty).ToUpper().Trim()),
-                            dataRow.Field<string>("ШОФЬОР"),
-                            dataRow.Field<string>("ЕГН"),
-                            dataRow.Field<string>("ТЕЛЕФОН"),
+                            String.IsNullOrEmpty(dataRow.Field<string>("№")) ? 0 : int.Parse(dataRow.Field<string>("№")!),
+                            TextFile.ReplaceCyrillic(dataRow.Field<string>("ВЛЕКАЧ")?.Replace(" ", string.Empty).Replace("-", string.Empty).ToUpper().Trim()),
+                            TextFile.ReplaceCyrillic(dataRow.Field<string>("РЕМАРКЕ")?.Replace(" ", string.Empty).Replace("-", string.Empty).ToUpper().Trim()),
+                            dataRow.Field<string>("ШОФЬОР")!,
+                            dataRow.Field<string>("ЕГН")!,
+                            dataRow.Field<string>("ТЕЛЕФОН")!,
                             DateTime.ParseExact(ws.TableName, "d.M", CultureInfo.InvariantCulture)
                             );
                     }
@@ -222,13 +222,13 @@ namespace WeightNotes
                         Console.WriteLine(nre.Message);
                     }
 
-                    if (trucksPlannedThisDay.ContainsKey(truckDetails.RegNum))
+                    if (trucksPlannedThisDay.ContainsKey(truckDetails.RegNum!))
                     {
                         Console.WriteLine($"Ремарке с № {truckDetails.RegNum} е планирано повече от 1 път за {truckDetails.FromDate.Date.ToString("dd.M.yyyy")}");
                     }
                     else
                     {
-                        trucksPlannedThisDay.Add(truckDetails.RegNum, truckDetails);
+                        trucksPlannedThisDay.Add(truckDetails.RegNum!, truckDetails);
                     }
                 }
 

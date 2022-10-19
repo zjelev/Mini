@@ -18,7 +18,7 @@ namespace CodeSums
                 ExcelWorksheet worksheet = package.Workbook.Worksheets.First(); //select sheet here
                 // int totalRows = worksheet.Dimension.End.Row;
                 // int totalColumns = worksheet.Dimension.End.Column;
-                string a1 = Convert.ToString(worksheet.Cells[1, 1].Value);
+                string? a1 = Convert.ToString(worksheet.Cells[1, 1].Value);
                 if (a1 == "Код")
                 {
                     worksheet.InsertRow(1, 5);
@@ -50,10 +50,10 @@ namespace CodeSums
                 for (int i = 7; i <= worksheet.Dimension.End.Row; i++)
                 {
                     int code = Convert.ToInt32(worksheet.Cells[i, 1].Value);
-                    string name = Convert.ToString(worksheet.Cells[i, 2].Value);
+                    string? name = Convert.ToString(worksheet.Cells[i, 2].Value);
                     decimal sum = Convert.ToDecimal(worksheet.Cells[i, 3].Value);
                     decimal hours = Convert.ToDecimal(worksheet.Cells[i, 4].Value);
-                    (int, string) key = new (code, name);
+                    (int, string) key = new (code, name!);
                     CodeSum codeSum = new CodeSum(code, sum, hours);
                     if (codesSums.ContainsKey(key))
                     {

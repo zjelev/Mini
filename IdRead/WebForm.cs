@@ -15,7 +15,7 @@ namespace IdRead
                 string pass = Email.ReadHidePassword();
 
                 // add your chromedriver.exe path here
-                ChromeDriver driver = new ChromeDriver(Directory.GetParent((Directory.GetParent(Environment.CurrentDirectory))?.ToString())?.ToString());
+                ChromeDriver? driver = new ChromeDriver(Directory.GetParent((Directory.GetParent(Environment.CurrentDirectory))!.ToString())?.ToString());
 
                 //Maximize your browser size
                 driver.Manage().Window.Maximize();

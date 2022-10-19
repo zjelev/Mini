@@ -16,13 +16,13 @@ namespace MaterialsPlanning
             var tables = Common.Excel.ReadFromExcel<List<DataTable>>(materialsFile);
             var materials = Controller.InitializeMaterials(tables);
 
-            string mb52File = Directory.GetFiles(currentDirectory, "mb52*.XLS")?.FirstOrDefault();
+            string mb52File = Directory.GetFiles(currentDirectory, "mb52*.XLS")?.FirstOrDefault()!;
             Controller.InsertQtysOnStock(materials, mb52File);
 
-            string zcoelFile = Directory.GetFiles(currentDirectory, "zcoel*.XLS")?.FirstOrDefault();
+            string zcoelFile = Directory.GetFiles(currentDirectory, "zcoel*.XLS")?.FirstOrDefault()!;
             Controller.InsertPastExpenses(materials, zcoelFile);
 
-            string me3mFile = Directory.GetFiles(currentDirectory, "me3m*.XLS")?.FirstOrDefault();
+            string me3mFile = Directory.GetFiles(currentDirectory, "me3m*.XLS")?.FirstOrDefault()!;
             Controller.InsertLastContract(materials, me3mFile);
 
             int startYear = int.Parse(zcoelFile.Substring(zcoelFile.IndexOf('-') + 1, 4));
@@ -45,7 +45,7 @@ namespace MaterialsPlanning
                     $"{qtyNeeded * material.Value.PriceLastContract:f2}");
             }
 
-            File.WriteAllText($"{materialsFile.Substring(0, materialsFile.Length - 4)}-анализ.csv", sb.ToString(), Common.Excel.srcEncoding);
+            File.WriteAllText($"{materialsFile?.Substring(0, materialsFile.Length - 4)}-анализ.csv", sb.ToString(), Common.Excel.srcEncoding);
         }
     }
 }

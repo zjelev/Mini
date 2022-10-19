@@ -14,12 +14,12 @@ namespace WeightNotes
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             var config = File.ReadAllText("config.json");
-            string veznaHost = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Host;
-            string veznaPath = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Path;
-            string veznaFile = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.File;
+            string? veznaHost = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Host;
+            string? veznaPath = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Path;
+            string? veznaFile = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.File;
 
-            string todaysFile = Directory.GetFiles($"\\\\{veznaHost}\\{veznaPath}", veznaFile).FirstOrDefault();
-            DailyTrucksGeologInfo dailyNote = Controller.GetTotalForTheDay(todaysFile);
+            string? todaysFile = Directory.GetFiles($"\\\\{veznaHost}\\{veznaPath}", veznaFile!).FirstOrDefault();
+            DailyTrucksGeologInfo dailyNote = Controller.GetTotalForTheDay(todaysFile!);
             string dateInTodaysFile = dailyNote.Date.ToString("dd.MM");
             string todaysNotesFileRenamed = Environment.CurrentDirectory + Path.DirectorySeparatorChar + DateTime.Now.Date.ToString("yyyy-MM-dd") + ".TXT";
             bool haveTrucksToday = false;
@@ -28,7 +28,7 @@ namespace WeightNotes
             {
                 try
                 {
-                    File.Copy(todaysFile, todaysNotesFileRenamed, true);
+                    File.Copy(todaysFile!, todaysNotesFileRenamed, true);
                     Console.WriteLine("Справката за деня беше копирана от " + todaysFile);
                     haveTrucksToday = true;
                 }
@@ -68,7 +68,7 @@ namespace WeightNotes
                 for (int shift = 1; shift <= 2; shift++)
                 {
                     (int, int) dayShift = new(day, shift);
-                    dailyWeights.Add(dayShift, null);
+                    dailyWeights.Add(dayShift, null!);
                 }
             }
 
@@ -93,7 +93,7 @@ namespace WeightNotes
             int month;
             var first = measures.FirstOrDefault();
             var last = measures.Last();
-            if (first.FromDate.Month == last.FromDate.Month)
+            if (first?.FromDate.Month == last.FromDate.Month)
             {
                 month = last.FromDate.Month;
             }
@@ -115,7 +115,7 @@ namespace WeightNotes
 
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("N ; Протокол; От дата ; Рег.номер ; Бруто ; Бруто час ; Тара ; Тара час ; Нето");
-            int firstProtokolNum = measures.FirstOrDefault().ProtokolNum;
+            int firstProtokolNum = measures.FirstOrDefault()!.ProtokolNum;
             int countProtokolNum = firstProtokolNum - 1;
             foreach (var measure in measures)
             {
@@ -148,7 +148,7 @@ namespace WeightNotes
                 try
                 {
                     string passwd = args[0];
-                    string senderName = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Name;
+                    string senderName = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Name!;
                     Email.Send(passwd, args[1], new List<string>(),
                         "Липсващи кантарни бележки за месеца", "Поздрави,\n"+senderName, new string[] { missingMeasuresFile });
                     TextFile.Log("Изпратена справка за липсващи бележки");
@@ -162,7 +162,7 @@ namespace WeightNotes
 
             #region Попълва файла от спедиторите
 
-            string file = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Speditor.File;
+            string file = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Speditor.File!;
             string? planXlxFile = Directory.GetFiles(Environment.CurrentDirectory, file).Where(name => !name.Contains("попълнен")).FirstOrDefault();
 
             if (planXlxFile != null)
@@ -216,9 +216,9 @@ namespace WeightNotes
 
                                 foreach (var measure in measuresCurrentDay)
                                 {
-                                    if (TextFile.ReplaceCyrillic(measure.RegNum.ToUpper().Trim()) == truckInfo.Key)
+                                    if (TextFile.ReplaceCyrillic(measure?.RegNum?.ToUpper().Trim()) == truckInfo.Key)
                                     {
-                                        sheet.Value[truckInfo.Key].Netto = measure.Netto;
+                                        sheet.Value[truckInfo.Key].Netto = measure!.Netto;
                                         sheet.Value[truckInfo.Key].ProtokolNum = measure.ProtokolNum;
                                         measuresCurrentDay.Remove(measure);
                                         break;
