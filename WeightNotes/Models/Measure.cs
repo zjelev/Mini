@@ -35,17 +35,17 @@ namespace WeightNotes
         public int Id { get; set; }
         public int ProtokolNum { get; set; }
         public DateTime FromDate { get; set; }
-        public string RegNum { get; set; }
+        public string? RegNum { get; set; }
         public int Bruto { get; set; }
-        public string BrutoHour { get; set; }
+        public string? BrutoHour { get; set; }
         public int Tara { get; set; }
-        public string TaraHour { get; set; }
+        public string? TaraHour { get; set; }
         public int Netto { get; set; }
 
-        public string TractorNum { get; set; }
-        public string Driver { get; set; }
-        public string Egn { get; set; }
-        public string Phone { get; set; }
+        public string? TractorNum { get; set; }
+        public string? Driver { get; set; }
+        public string? Egn { get; set; }
+        public string? Phone { get; set; }
 
         public override string ToString()
         {

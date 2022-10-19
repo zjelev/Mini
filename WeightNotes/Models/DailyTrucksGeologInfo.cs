@@ -1,5 +1,3 @@
-using System;
-
 namespace WeightNotes
 {
     public class DailyTrucksGeologInfo
@@ -17,12 +15,12 @@ namespace WeightNotes
         {
             //this.Client = "";
         }
-        public string Client { get; set; }
+        public string? Client { get; set; }
         public int MineNum { get; set; }
         public DateTime Date { get; set; }
         public int Shift { get; set; }
         public decimal NetWeightInTons { get; set; }
-        public string AshesPercent { get; set; }
+        public string? AshesPercent { get; set; }
         public int NumOfTrucks { get; set; }
 
         public string DateString => this.Date.ToString("d.M.yyyy г.");

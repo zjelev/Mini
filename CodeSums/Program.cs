@@ -29,7 +29,7 @@ namespace CodeSums
                                 Controller.AddSumsByCode(file, codesSums);
                             }
                             Console.WriteLine("В директория {0} бяха обработени {1} файла.", subDir, xlsxFiles.Count);
-                            string upperFolderName = new DirectoryInfo(Path.GetDirectoryName(subDir)).Name;
+                            string? upperFolderName = new DirectoryInfo(Path.GetDirectoryName(subDir)!).Name;
                             Controller.InsertCodesSumsInXlsx(codesSums, subDir + "_Recap_" + upperFolderName.ToUpper() + "_MMI.xlsx");
                         }
                     }

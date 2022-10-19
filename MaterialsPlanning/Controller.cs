@@ -18,12 +18,12 @@ namespace MaterialsPlanning
                     {
                         material = new Material()
                         {
-                            Id = int.Parse(dataRow.Field<string>("№")),
-                            SapNum = dataRow.Field<string>("SAP №"),
-                            Name = dataRow.Field<string>("Наименование"),
+                            Id = int.Parse(dataRow.Field<string>("№")!),
+                            SapNum = dataRow.Field<string>("SAP №")!,
+                            Name = dataRow.Field<string>("Наименование")!,
                             ProductNum = dataRow.Field<string>("Продуктов номер"),
-                            Producer = dataRow.Field<string>("Производител"),
-                            Measure = dataRow.Field<string>("МЕ")
+                            Producer = dataRow.Field<string>("Производител")!,
+                            Measure = dataRow.Field<string>("МЕ")!
                         };
                     }
                     catch (NullReferenceException nre)
@@ -31,13 +31,13 @@ namespace MaterialsPlanning
                         TextFile.Log(nre.Message);
                     }
 
-                    if (materials.ContainsKey(material.SapNum))
+                    if (materials.ContainsKey(material.SapNum!))
                     {
                         Console.WriteLine("Материал \"{0}\" със SAP № {1} присъства в таблицата повече от веднъж", material.Name, material.SapNum);
                     }
                     else
                     {
-                        materials.Add(material.SapNum, material);
+                        materials.Add(material.SapNum!, material);
                     }
                 }
             }
@@ -45,7 +45,7 @@ namespace MaterialsPlanning
         }
         internal static void InsertLastContract(Dictionary<string, Material> materials, string? me3mFile)
         {
-            string[] me3m = File.ReadAllLines(me3mFile);
+            string[] me3m = File.ReadAllLines(me3mFile!);
             var lastContractForMaterial = new Dictionary<string, Material>();
 
             for (int i = 5; i < me3m.Length; i++)
@@ -107,7 +107,7 @@ namespace MaterialsPlanning
 
         internal static void InsertPastExpenses(Dictionary<string, Material> materials, string? zcoelFile)
         {
-            string[] zcoel = File.ReadAllLines(zcoelFile);
+            string[] zcoel = File.ReadAllLines(zcoelFile!);
 
             for (int i = 6; i < zcoel.Length; i++)
             {
@@ -143,7 +143,7 @@ namespace MaterialsPlanning
 
         internal static void InsertQtysOnStock(Dictionary<string, Material> materials, string? mb52File) // Format FinCtrl
         {
-            string[] mb52 = File.ReadAllLines(mb52File);
+            string[] mb52 = File.ReadAllLines(mb52File!);
             for (int i = 3; i < mb52.Length; i++)
             {
                 string[] lineSplit = mb52[i].Split('\t', StringSplitOptions.RemoveEmptyEntries);
