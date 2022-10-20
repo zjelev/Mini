@@ -1,10 +1,7 @@
-﻿using System.Data;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Common;
-using OfficeOpenXml;
-using OfficeOpenXml.Style;
 
 namespace WeightNotes
 {
@@ -12,10 +9,11 @@ namespace WeightNotes
     {
         private static string config = File.ReadAllText("config.json");
         private static string logPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "AvtoveznaMonthly" + Path.DirectorySeparatorChar;
+
         private static void Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            
+
             string veznaHost = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Host!;
             string veznaPath = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Path!;
             string veznaFile = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.File!;
@@ -50,7 +48,6 @@ namespace WeightNotes
             {
                 TextFile.Log("Днес не е правена справка", logPath);
             }
-
 
             string[] weightNotesTxtFiles = Directory.GetFiles(Environment.CurrentDirectory, "20*.txt");
             var measures = new List<Measure>();
@@ -164,176 +161,49 @@ namespace WeightNotes
                 }
             }
 
-            FillPlan(args, todaysNotesFileRenamed, haveTrucksToday, spravkaUpdated, measures);
-        }
+            string speditorFile = JsonSerializer.Deserialize<ConfigWeightNotes>(config).Speditor.File;
+            string planXlxFileFilled = Controller.FillPlan(measures, speditorFile, logPath);
 
-        private static void FillPlan(string[] args, string todaysNotesFileRenamed, bool haveTrucksToday, bool spravkaUpdated, List<Measure> measures)
-        {
-            string file = JsonSerializer.Deserialize<ConfigWeightNotes>(config).Speditor.File;
-            string? planXlxFile = Directory.GetFiles(logPath, file).Where(name => !name.Contains("попълнен")).FirstOrDefault();
+            StringBuilder body = new StringBuilder();
 
-            if (planXlxFile != null)
+            if (planXlxFileFilled == "Нетото за деня се различава.")
             {
-                var speditorDailySheets = Controller.GetPlannedTrucksDaily(planXlxFile);
-                string upperDir = Directory.GetParent(Directory.GetParent(planXlxFile).ToString()).ToString();
-                string fileName = Path.GetFileName(planXlxFile);
-                string planXlxFileFilled = upperDir + "\\" + fileName.Substring(0, fileName.LastIndexOf('.')) + "-" + DateTime.Now.Day + "-попълнен.xlsx";
-
-                StringBuilder body = new StringBuilder();
-                body.AppendLine("Това е автоматично генериран е-мейл.");
-                body.AppendLine("Warnings:");
-
-                using (ExcelPackage package = new ExcelPackage(new FileInfo(planXlxFileFilled)))
+                if (args.Length > 0 && haveTrucksToday)
                 {
-                    while (package.Workbook.Worksheets.Count > 0)
+                    string passwd = args[0];
+                    Email.Send(passwd, "sender", new List<string>(), "Справка автo ERROR", body.ToString(),
+                    new string[] { todaysNotesFileRenamed, planXlxFileFilled });
+                    planXlxFileFilled.Concat(" Беше изпратен мейл до разработчика");
+                }
+                TextFile.Log(planXlxFileFilled, logPath);
+                return;
+            }
+
+            if (args.Length > 1)
+            {
+                string passwd = args[0];
+                string recipient = args[1];
+                List<string> ccRecipients = new List<string>();
+
+                if (args.Length > 2)
+                {
+                    for (int i = 2; i < args.Length; i++)
                     {
-                        package.Workbook.Worksheets.Delete(0);
-                    }
-
-                    //foreach (var sheet in speditorDailySheets)
-                    //{
-                    string sheetKey = DateTime.Now.Day + "." + DateTime.Now.Month;
-                    Dictionary<string, Measure> sheetValue = new Dictionary<string, Measure>();
-
-                    try
-                    {
-                        sheetValue = speditorDailySheets[sheetKey];
-                    }
-                    catch (KeyNotFoundException knfe)
-                    {
-                        TextFile.Log(knfe.Message, logPath);
-                    }
-
-                    ExcelWorksheet ws = package.Workbook.Worksheets.Add(sheetKey);
-
-                    ws.DefaultRowHeight = 15;
-                    ws.Column(1).Width = 5;
-                    ws.Column(2).Width = 11;
-                    ws.Column(3).Width = 11;
-                    ws.Column(4).Width = 30;
-                    ws.Column(5).Width = 13;
-                    ws.Column(6).Width = 10;
-                    ws.Column(7).Width = 10;
-                    ws.Row(1).Style.Font.Bold = true;
-
-                    DataTable dataTable = new DataTable();
-                    dataTable.Columns.Add("№", typeof(string));
-                    dataTable.Columns.Add("ВЛЕКАЧ", typeof(string));
-                    dataTable.Columns.Add("РЕМАРКЕ", typeof(string));
-                    dataTable.Columns.Add("ШОФЬОР", typeof(string));
-                    dataTable.Columns.Add("ЕГН", typeof(string));
-                    dataTable.Columns.Add("ТЕЛЕФОН", typeof(string));
-                    dataTable.Columns.Add("тонаж", typeof(int));
-
-                    var measuresCurrentDay = measures.Where(x => x.FromDate.ToString("dd.M") == sheetKey).ToList();
-                    int sumMeasuresCurrentDay = measuresCurrentDay.Sum(m => m.Netto);
-
-                    int knfeCounter = 0;
-                    int countFilled = 0;
-                    foreach (var truckInfo in sheetValue)
-                    {
-                        try
-                        {
-                            sheetValue[truckInfo.Key].ProtokolNum = 0;
-
-                            foreach (var measure in measuresCurrentDay)
-                            {
-                                if (TextFile.ReplaceCyrillic(measure.RegNum?.ToUpper().Trim()) == truckInfo.Key)
-                                {
-                                    sheetValue[truckInfo.Key].Netto = measure.Netto;
-                                    sheetValue[truckInfo.Key].ProtokolNum = measure.ProtokolNum;
-                                    countFilled++;
-                                    measuresCurrentDay.Remove(measure);
-                                    break;
-                                }
-                            }
-                        }
-                        catch (KeyNotFoundException knfe)
-                        {
-                            body.AppendLine($"{ws.Name} - No. {++knfeCounter}: {knfe.Message}");
-                        }
-                        dataTable.Rows.Add(truckInfo.Value.ProtokolNum, truckInfo.Value.TractorNum, truckInfo.Key,
-                                    truckInfo.Value.Driver, truckInfo.Value.Egn, truckInfo.Value.Phone, truckInfo.Value.Netto);
-                    }
-
-                    foreach (var measure in measuresCurrentDay)
-                    {
-                        dataTable.Rows.Add(measure.ProtokolNum, measure.TractorNum, measure.RegNum,
-                                    measure.Driver, measure.Egn, measure.Phone, measure.Netto);
-                        countFilled++;
-                    }
-
-                    //add all the content from the DataTable, starting at cell A1
-                    ws.Cells["A1"].LoadFromDataTable(dataTable, true);
-
-                    int sumInXlxFile = 0;
-
-                    for (int row = 1; row <= dataTable.Rows.Count + 1; row++)
-                    {
-                        for (int col = 1; col <= dataTable.Columns.Count; col++)
-                        {
-                            ws.Cells[row, col].Style.Fill.PatternType = ExcelFillStyle.LightGrid;
-                            ws.Cells[row, col].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.White);
-                            ws.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                            ws.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
-                            ws.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                            ws.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                        }
-
-                        sumInXlxFile += ws.Cells[row + 1, dataTable.Columns.Count].GetValue<int>();
-                    }
-
-                    if (sumInXlxFile != sumMeasuresCurrentDay)
-                    {
-                        string error = "Нетото за деня се различава.";
-
-                        if (args.Length > 0 && haveTrucksToday)
-                        {
-                            string passwd = args[0];
-                            Email.Send(passwd, "sender", new List<string>(), "Справка автo ERROR", body.ToString(),
-                            new string[] { todaysNotesFileRenamed, planXlxFileFilled });
-                            error.Concat(" Беше изпратен мейл до разработчика");
-                        }
-                        TextFile.Log(error, logPath);
-                        throw new ArgumentException(error);
-                    }
-                    else
-                    {
-                        ws.Cells[dataTable.Rows.Count + 2, dataTable.Columns.Count].Value = sumInXlxFile;
-                        ws.Cells[dataTable.Rows.Count + 2, 1].Formula = countFilled.ToString();
-                    }
-                    //}
-                    package.Save();
-
-                    if (args.Length > 1)
-                    {
-                        string passwd = args[0];
-                        string recipient = args[1];
-                        List<string> ccRecipients = new List<string>();
-
-                        if (args.Length > 2)
-                        {
-                            for (int i = 2; i < args.Length; i++)
-                            {
-                                ccRecipients.Add(args[i]);
-                            }
-                        }
-                        string bodyStr = body.ToString();
-
-                        if (haveTrucksToday && spravkaUpdated)
-                        {
-                            Email.Send(passwd, recipient, ccRecipients, "Справка автовезна р-к 3", body.ToString(),
-                                new string[] { todaysNotesFileRenamed, planXlxFileFilled });
-                            TextFile.Log(" Беше изпратен е-мейл до спедиторите", logPath);
-                        }
+                        ccRecipients.Add(args[i]);
                     }
                 }
-                TextFile.Log("OK", logPath);
+
+                body.AppendLine("Това е автоматично генериран е-мейл.");
+
+                if (haveTrucksToday && spravkaUpdated)
+                {
+                    Email.Send(passwd, recipient, ccRecipients, "Справка автовезна р-к 3", body.ToString(),
+                        new string[] { todaysNotesFileRenamed, planXlxFileFilled });
+                    TextFile.Log(" Беше изпратен е-мейл до спедиторите", logPath);
+                }
             }
-            else
-            {
-                TextFile.Log("За днес не са планирани камиони.", logPath);
-            }
+
+            TextFile.Log("OK", logPath);
         }
     }
 }

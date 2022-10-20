@@ -8,7 +8,7 @@ namespace WeightNotes
 {
     public class Controller
     {
-        public static DailyTrucksGeologInfo GetTotalForTheDay(string note)
+        internal static DailyTrucksGeologInfo GetTotalForTheDay(string note)
         {
             string[] lines = File.ReadAllLines(note, Excel.srcEncoding);
             string supplier = lines[0].Trim();
@@ -61,12 +61,6 @@ namespace WeightNotes
                 StringSplitOptions.RemoveEmptyEntries), cl => cl.Trim());
             int totalNet = int.Parse(total[total.Length - 1]);
 
-            // string[] lastMeasure = new string[] { };
-
-            // while (lastMeasure.Length != 10)
-            // {
-            //     lastMeasure = Array.ConvertAll(lines[totalLineNum--].Split('|', StringSplitOptions.RemoveEmptyEntries), cl => cl.Trim());
-            // }
             string noteFileName = Path.GetFileName(note);
             int shift = 1;
             if (noteFileName.Length == 16)
@@ -90,8 +84,7 @@ namespace WeightNotes
             return dataTable;
         }
 
-        public static void InsertDailyTotals(
-            // List<DailyTrucksInfo> trucksInfos,
+        internal static void InsertDailyTotals(
             Dictionary<(int, int), DailyTrucksGeologInfo> dailyWeights,
             string xlsxFile, string startDate, string endDate)
         {
@@ -99,17 +92,14 @@ namespace WeightNotes
 
             foreach (var row in dailyWeights)
             {
-                // dataTable.Rows.Add(trucksInfo.DateString, trucksInfo.Shift, trucksInfo.NetWeightInTons, trucksInfo.AshesPercent, trucksInfo.NumOfTrucks);
                 if (row.Value == null)
                 {
                     dataTable.Rows.Add(row.Key.Item1, row.Key.Item2);
-
                 }
                 else
                 {
                     dataTable.Rows.Add(row.Key.Item1, row.Key.Item2, row.Value.NetWeightInTons, row.Value.AshesPercent, row.Value.NumOfTrucks);
                 }
-
             }
 
             using (ExcelPackage package = new ExcelPackage(new FileInfo(xlsxFile)))
@@ -235,6 +225,140 @@ namespace WeightNotes
                 trucksPlannedThisMonth.Add(ws.TableName, trucksPlannedThisDay);
             }
             return trucksPlannedThisMonth;
+        }
+
+        internal static string FillPlan(List<Measure> measures, string speditorFile, string logPath)
+        {
+            string? planXlxFile = Directory.GetFiles(logPath, speditorFile).Where(name => !name.Contains("попълнен")).FirstOrDefault();
+
+            if (planXlxFile != null)
+            {
+                var speditorDailySheets = Controller.GetPlannedTrucksDaily(planXlxFile);
+                string upperDir = Directory.GetParent(Directory.GetParent(planXlxFile).ToString()).ToString();
+                string fileName = Path.GetFileName(planXlxFile);
+                string planXlxFileFilled = upperDir + "\\" + fileName.Substring(0, fileName.LastIndexOf('.')) + "-" + DateTime.Now.Day + "-попълнен.xlsx";
+
+                using (ExcelPackage package = new ExcelPackage(new FileInfo(planXlxFileFilled)))
+                {
+                    while (package.Workbook.Worksheets.Count > 0)
+                    {
+                        package.Workbook.Worksheets.Delete(0);
+                    }
+
+                    //foreach (var sheet in speditorDailySheets)
+                    //{
+                    string sheetKey = DateTime.Now.Day + "." + DateTime.Now.Month;
+                    Dictionary<string, Measure> sheetValue = new Dictionary<string, Measure>();
+
+                    try
+                    {
+                        sheetValue = speditorDailySheets[sheetKey];
+                    }
+                    catch (KeyNotFoundException knfe)
+                    {
+                        TextFile.Log(knfe.Message, logPath);
+                    }
+
+                    ExcelWorksheet ws = package.Workbook.Worksheets.Add(sheetKey);
+
+                    ws.DefaultRowHeight = 15;
+                    ws.Column(1).Width = 5;
+                    ws.Column(2).Width = 11;
+                    ws.Column(3).Width = 11;
+                    ws.Column(4).Width = 30;
+                    ws.Column(5).Width = 13;
+                    ws.Column(6).Width = 10;
+                    ws.Column(7).Width = 10;
+                    ws.Row(1).Style.Font.Bold = true;
+
+                    DataTable dataTable = new DataTable();
+                    dataTable.Columns.Add("№", typeof(string));
+                    dataTable.Columns.Add("ВЛЕКАЧ", typeof(string));
+                    dataTable.Columns.Add("РЕМАРКЕ", typeof(string));
+                    dataTable.Columns.Add("ШОФЬОР", typeof(string));
+                    dataTable.Columns.Add("ЕГН", typeof(string));
+                    dataTable.Columns.Add("ТЕЛЕФОН", typeof(string));
+                    dataTable.Columns.Add("тонаж", typeof(int));
+
+                    var measuresCurrentDay = measures.Where(x => x.FromDate.ToString("dd.M") == sheetKey).ToList();
+                    int sumMeasuresCurrentDay = measuresCurrentDay.Sum(m => m.Netto);
+
+                    int knfeCounter = 0;
+                    int countFilled = 0;
+                    foreach (var truckInfo in sheetValue)
+                    {
+                        try
+                        {
+                            sheetValue[truckInfo.Key].ProtokolNum = 0;
+
+                            foreach (var measure in measuresCurrentDay)
+                            {
+                                if (TextFile.ReplaceCyrillic(measure.RegNum?.ToUpper().Trim()) == truckInfo.Key)
+                                {
+                                    sheetValue[truckInfo.Key].Netto = measure.Netto;
+                                    sheetValue[truckInfo.Key].ProtokolNum = measure.ProtokolNum;
+                                    countFilled++;
+                                    measuresCurrentDay.Remove(measure);
+                                    break;
+                                }
+                            }
+                        }
+                        catch (KeyNotFoundException knfe)
+                        {
+                            TextFile.Log($"{ws.Name} - No. {++knfeCounter}: {knfe.Message}", logPath);
+                        }
+                        dataTable.Rows.Add(truckInfo.Value.ProtokolNum, truckInfo.Value.TractorNum, truckInfo.Key,
+                                    truckInfo.Value.Driver, truckInfo.Value.Egn, truckInfo.Value.Phone, truckInfo.Value.Netto);
+                    }
+
+                    foreach (var measure in measuresCurrentDay)
+                    {
+                        dataTable.Rows.Add(measure.ProtokolNum, measure.TractorNum, measure.RegNum,
+                                    measure.Driver, measure.Egn, measure.Phone, measure.Netto);
+                        countFilled++;
+                    }
+
+                    //add all the content from the DataTable, starting at cell A1
+                    ws.Cells["A1"].LoadFromDataTable(dataTable, true);
+
+                    int sumInXlxFile = 0;
+
+                    for (int row = 1; row <= dataTable.Rows.Count + 1; row++)
+                    {
+                        for (int col = 1; col <= dataTable.Columns.Count; col++)
+                        {
+                            ws.Cells[row, col].Style.Fill.PatternType = ExcelFillStyle.LightGrid;
+                            ws.Cells[row, col].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.White);
+                            ws.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                            ws.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                            ws.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                            ws.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                        }
+
+                        sumInXlxFile += ws.Cells[row + 1, dataTable.Columns.Count].GetValue<int>();
+                    }
+
+                    if (sumInXlxFile != sumMeasuresCurrentDay)
+                    {
+                        string error = "Нетото за деня се различава.";
+                        TextFile.Log(error, logPath);
+                        return error;
+                    }
+                    else
+                    {
+                        ws.Cells[dataTable.Rows.Count + 2, dataTable.Columns.Count].Value = sumInXlxFile;
+                        ws.Cells[dataTable.Rows.Count + 2, 1].Formula = countFilled.ToString();
+                    }
+                    //}
+                    package.Save();
+                }
+                return planXlxFileFilled;
+            }
+            else
+            {
+                TextFile.Log("За днес не са планирани камиони.", logPath);
+                return string.Empty;
+            }
         }
     }
 }
