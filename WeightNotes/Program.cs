@@ -10,10 +10,12 @@ namespace WeightNotes
 {
     internal class Program
     {
+        private static string config = File.ReadAllText("config.json");
+        private static string logPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "AvtoveznaMonthly" + Path.DirectorySeparatorChar;
         private static void Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            var config = File.ReadAllText("config.json");
+            
             string veznaHost = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Host!;
             string veznaPath = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.Path!;
             string veznaFile = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Vezna.File!;
@@ -36,39 +38,39 @@ namespace WeightNotes
                     }
                     catch (IOException iox)
                     {
-                        TextFile.Log(iox.Message);
+                        TextFile.Log(iox.Message, logPath);
                     }
                 }
                 else
                 {
-                    TextFile.Log("Справката не е обновена.");
+                    TextFile.Log("Справката не е обновена.", logPath);
                 }
             }
             else
             {
-                TextFile.Log("Днес не е правена справка");
+                TextFile.Log("Днес не е правена справка", logPath);
             }
 
 
             string[] weightNotesTxtFiles = Directory.GetFiles(Environment.CurrentDirectory, "20*.txt");
             var measures = new List<Measure>();
 
-            if (weightNotesTxtFiles.Length > 62)
+            int days = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+            if (weightNotesTxtFiles.Length > days * 2)
             {
-                string error = " В директорията има повече от 62 файла. Моля махнете тези, които са от предходни месеци.";
-                TextFile.Log(error);
+                string error = $" В директорията има повече от {days * 2} файла. Моля махнете тези, които са от предходни месеци.";
+                TextFile.Log(error, logPath);
                 throw new ArgumentException(error);
             }
 
             if (weightNotesTxtFiles.Length == 0)
             {
                 string error = "В директорията няма файлове.";
-                TextFile.Log(error);
+                TextFile.Log(error, logPath);
                 throw new ArgumentException(error);
             }
 
             var dailyWeights = new Dictionary<(int, int), DailyTrucksGeologInfo>();
-            int days = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
 
             for (int day = 1; day <= days; day++)
             {
@@ -92,7 +94,7 @@ namespace WeightNotes
                 }
                 else
                 {
-                    TextFile.Log($" Името на файла {Path.GetFileName(note)} не съответства на датата в него. Файлът ще бъде преименуван като датата в него.");
+                    TextFile.Log($" Името на файла {Path.GetFileName(note)} не съответства на датата в него. Файлът ще бъде преименуван като датата в него.", logPath);
                 }
                 measures.AddRange(currentMeasures);
             }
@@ -107,7 +109,7 @@ namespace WeightNotes
             else
             {
                 string error = "В папката има файлове от различни месеци";
-                TextFile.Log(error);
+                TextFile.Log(error, logPath);
                 throw new ArgumentException(error);
             }
 
@@ -142,40 +144,40 @@ namespace WeightNotes
             File.WriteAllText(allMeasuresFile, sb.ToString(), Excel.srcEncoding);
             Console.WriteLine($"Файлът {allMeasuresFile.Substring(allMeasuresFile.LastIndexOf('\\') + 1, allMeasuresFile.Length - allMeasuresFile.LastIndexOf('\\') - 1)} беше обновен.");
 
-            string missingMeasuresFile = "Липсващи бележки.csv";
+            string missingMeasuresFile = logPath + "Липсващи бележки.csv";
             File.WriteAllText(missingMeasuresFile, missingProtokols.ToString(), Excel.srcEncoding);
             string lastMissingProtokol = missingProtokols.Remove(0, missingProtokols.Length - 17).ToString().Substring(0, 10);
-            // int lastMissingProtokolDay = int.Parse(lastMissingProtokol.Substring(0, 2));
-            // int lastMissingProtokolMonth = int.Parse(lastMissingProtokol.Substring(3, 2));
-            // int lastMissingProtokolYear = int.Parse(lastMissingProtokol.Substring(6, 4));
-            // DateTime lastMissingProtokolDate = new DateTime(lastMissingProtokolYear, lastMissingProtokolMonth, lastMissingProtokolDay);
 
             if (DateTime.Now.Date.ToString("dd.MM.yyyy").Equals(lastMissingProtokol) && args.Length == 2)
             {
                 try
                 {
                     string passwd = args[0];
-                    string senderName = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Name!;
+                    string senderName = JsonSerializer.Deserialize<ConfigWeightNotes>(config).User.Name;
                     Email.Send(passwd, args[1], new List<string>(),
                         "Липсващи кантарни бележки за месеца", "Поздрави,\n" + senderName, new string[] { missingMeasuresFile });
-                    TextFile.Log("Изпратена справка за липсващи бележки");
+                    TextFile.Log("Изпратена справка за липсващи бележки", logPath);
                 }
                 catch (System.Exception e)
                 {
-                    TextFile.Log(e.Message);
+                    TextFile.Log(e.Message, logPath);
                 }
-
             }
 
-            #region Попълва файла от спедиторите
+            FillPlan(args, todaysNotesFileRenamed, haveTrucksToday, spravkaUpdated, measures);
+        }
 
-            string file = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.Speditor.File!;
-            string? planXlxFile = Directory.GetFiles(Environment.CurrentDirectory, file).Where(name => !name.Contains("попълнен")).FirstOrDefault();
+        private static void FillPlan(string[] args, string todaysNotesFileRenamed, bool haveTrucksToday, bool spravkaUpdated, List<Measure> measures)
+        {
+            string file = JsonSerializer.Deserialize<ConfigWeightNotes>(config).Speditor.File;
+            string? planXlxFile = Directory.GetFiles(logPath, file).Where(name => !name.Contains("попълнен")).FirstOrDefault();
 
             if (planXlxFile != null)
             {
                 var speditorDailySheets = Controller.GetPlannedTrucksDaily(planXlxFile);
-                string planXlxFileFilled = planXlxFile.Substring(0, planXlxFile.LastIndexOf('.')) + "-" + DateTime.Now.Day + "-попълнен.xlsx";
+                string upperDir = Directory.GetParent(Directory.GetParent(planXlxFile).ToString()).ToString();
+                string fileName = Path.GetFileName(planXlxFile);
+                string planXlxFileFilled = upperDir + "\\" + fileName.Substring(0, fileName.LastIndexOf('.')) + "-" + DateTime.Now.Day + "-попълнен.xlsx";
 
                 StringBuilder body = new StringBuilder();
                 body.AppendLine("Това е автоматично генериран е-мейл.");
@@ -191,7 +193,16 @@ namespace WeightNotes
                     //foreach (var sheet in speditorDailySheets)
                     //{
                     string sheetKey = DateTime.Now.Day + "." + DateTime.Now.Month;
-                    var sheetValue = speditorDailySheets[sheetKey];
+                    Dictionary<string, Measure> sheetValue = new Dictionary<string, Measure>();
+
+                    try
+                    {
+                        sheetValue = speditorDailySheets[sheetKey];
+                    }
+                    catch (KeyNotFoundException knfe)
+                    {
+                        TextFile.Log(knfe.Message, logPath);
+                    }
 
                     ExcelWorksheet ws = package.Workbook.Worksheets.Add(sheetKey);
 
@@ -283,7 +294,7 @@ namespace WeightNotes
                             new string[] { todaysNotesFileRenamed, planXlxFileFilled });
                             error.Concat(" Беше изпратен мейл до разработчика");
                         }
-                        TextFile.Log(error);
+                        TextFile.Log(error, logPath);
                         throw new ArgumentException(error);
                     }
                     else
@@ -313,17 +324,16 @@ namespace WeightNotes
                         {
                             Email.Send(passwd, recipient, ccRecipients, "Справка автовезна р-к 3", body.ToString(),
                                 new string[] { todaysNotesFileRenamed, planXlxFileFilled });
-                            TextFile.Log(" Беше изпратен е-мейл до спедиторите");
+                            TextFile.Log(" Беше изпратен е-мейл до спедиторите", logPath);
                         }
                     }
                 }
-                TextFile.Log("OK");
+                TextFile.Log("OK", logPath);
             }
             else
             {
-                TextFile.Log("За днес не са планирани камиони.");
+                TextFile.Log("За днес не са планирани камиони.", logPath);
             }
-            #endregion
         }
     }
 }
