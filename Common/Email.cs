@@ -11,9 +11,9 @@ namespace Common
         public static void Send(string passwd, string recipient, List<string> ccRecipients, string subject, string body, string[] attachments)
         {
             var config = File.ReadAllText("config.json");
-            string mailServer = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Host;
-            string domain = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Domain;
-            string account = JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Account;
+            string mailServer = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Host;
+            string domain = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Domain;
+            string account = JsonSerializer.Deserialize<ConfigEmail>(config)?.User.Account;
             string sender = account + "@" + domain;
 
             using SmtpClient smtpServer = new SmtpClient(mailServer + "." + domain);
@@ -38,7 +38,7 @@ namespace Common
             mail.Bcc.Add(sender);
 
             mail.Subject = subject;
-            mail.Body = body + Environment.NewLine + "Contact: " + JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Phone;
+            mail.Body = body + Environment.NewLine + "Contact: " + JsonSerializer.Deserialize<ConfigEmail>(config).User.Phone;
 
             foreach (var attach in attachments)
             {
@@ -46,7 +46,7 @@ namespace Common
                 mail.Attachments.Add(attachment);
             }
 
-            smtpServer.Port = JsonSerializer.Deserialize<ConfigWeightNotes>(config).SmtpServer.Port;
+            smtpServer.Port = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Port;
             smtpServer.Credentials = new System.Net.NetworkCredential(account, passwd);
             smtpServer.EnableSsl = false;
 
