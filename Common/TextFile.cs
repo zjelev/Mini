@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Common
@@ -32,6 +35,7 @@ namespace Common
         {
             if ((Regex.IsMatch(regNum, @"\p{IsCyrillic}")))
             {
+                // TODO: Use foreach
                 regNum = regNum.Replace('А', 'A');
                 regNum = regNum.Replace('В', 'B');
                 regNum = regNum.Replace('С', 'C');
@@ -93,11 +97,119 @@ namespace Common
 
         public static void Log(string message)
         {
-            using StreamWriter logFileStream = new StreamWriter(new FileStream("log.txt", FileMode.Append));
+            Log(message, Environment.CurrentDirectory);
+        }
+
+        public static void Log(string message, string path)
+        {
+            using StreamWriter logFileStream = new StreamWriter(new FileStream(path + "\\log.txt", FileMode.Append));
             string log = String.Empty;
             log = DateTime.Now.ToString() + " " + message;
             Console.WriteLine(log);
             logFileStream.WriteLine(log);
+        }
+
+
+        public static IEnumerable<FileInfo> CompareDirs(string pathA, string patternA, string pathB, string patternB)
+        {
+            // Take a snapshot of the file system.  
+            IEnumerable<FileInfo> list1 = new DirectoryInfo(pathA).GetFiles(patternA, SearchOption.AllDirectories);
+            IEnumerable<FileInfo> list2 = new DirectoryInfo(pathB).GetFiles(patternB, SearchOption.AllDirectories);
+
+            //A custom file comparer 
+            FileCompare fileCompare = new FileCompare();
+
+            // This query determines whether the two folders contain  
+            // identical file lists, based on the custom file comparer  
+            // that is defined in the FileCompare class.  
+            // The query executes immediately because it returns a bool.  
+            bool areIdentical = list1.SequenceEqual(list2, fileCompare);
+
+            if (areIdentical == true)
+            {
+                Console.WriteLine("the two folders are the same");
+                return null;
+            }
+            else
+            {
+                Console.WriteLine("The two folders are not the same");
+
+                // // Find the common files. It produces a sequence and doesn't execute until the foreach statement.  
+                // var queryCommonFiles = list1.Intersect(list2, fileCompare);
+
+                // if (queryCommonFiles.Any())
+                // {
+                //     Console.WriteLine("The following files are in both folders:");
+                //     foreach (var v in queryCommonFiles)
+                //     {
+                //         Console.WriteLine(v.FullName); //shows which items end up in result list  
+                //     }
+                // }
+                // else
+                // {
+                //     Console.WriteLine("There are no common files in the two folders.");
+                // }
+
+                // Find the set difference between the two folders. For this example we only check one way.  
+                var queryList1Only =
+                    list1.Except(list2, fileCompare);
+                //(from file in list1 select file).Except(list2, fileCompare);
+
+                Console.WriteLine($"The following files are in {list1.FirstOrDefault().Directory.ToString()} " +
+                    $"but not in {list2.FirstOrDefault().Directory.ToString()}:");
+
+                foreach (var v in queryList1Only)
+                {
+                    Console.WriteLine(v.FullName);
+                }
+
+                return queryList1Only;
+            }
+        }
+
+        public static void SaveNew(string logPath, StringBuilder sb, string file)
+        {
+            File.WriteAllText(file + "-temp", sb.ToString(), Excel.srcEncoding);
+
+            if (File.Exists(file))
+            {
+                if (!FilesMatch(file, file + "-temp"))
+                {
+                    File.Copy(file + "-temp", file, true);
+                    Log($"Файлът {Path.GetFileName(file)} беше обновен.", logPath);
+                }
+                else
+                {
+                    Log($"Няма нова информация. Файлът {Path.GetFileName(file)} не беше обновен.", logPath);
+                }
+                File.Delete(file + "-temp");
+            }
+
+        }
+    }
+
+    // This implementation defines a very simple comparison  
+    // between two FileInfo objects. It only compares the name  
+    // of the files being compared and their length in bytes.  
+    class FileCompare : IEqualityComparer<FileInfo>
+    {
+        public FileCompare() { }
+
+        public bool Equals(FileInfo f1, FileInfo f2)
+        {
+            return (f1.LastWriteTime == f2.LastWriteTime &&
+                    f1.Length == f2.Length);
+        }
+
+        // Return a hash that reflects the comparison criteria. According to the
+        // rules for IEqualityComparer<T>, if Equals is true, then the hash codes must  
+        // also be equal. Because equality as defined here is a simple value equality, not  
+        // reference identity, it is possible that two or more objects will produce the same  
+        // hash code.  
+        public int GetHashCode(FileInfo fi)
+        {
+            string s = $"{fi.LastWriteTime}{fi.Length}";
+            return s.GetHashCode();
         }
     }
 }

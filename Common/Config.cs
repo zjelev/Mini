@@ -1,13 +1,5 @@
 namespace Common
 {
-    public class ConfigWeightNotes
-    {
-        public User User { get; set; }
-        public SmtpServer SmtpServer { get; set; }
-        public Vezna Vezna { get; set; }
-        public Speditor Speditor { get; set; }
-    }
-
     public class ConfigEFUtils
     {
         public string Podelenie { get; set; }
@@ -22,6 +14,11 @@ namespace Common
         public string SecondSourceTable { get; set; }
     }
 
+    public class ConfigEmail
+    {
+        public User User { get; set; }
+        public SmtpServer SmtpServer { get; set; }
+    }
     public class User
     {
         public string Name { get; set; }
@@ -34,18 +31,5 @@ namespace Common
         public string Host { get; set; }
         public string Domain { get; set; }
         public int Port { get; set; }
-    }
-
-    public class Vezna
-    {
-        public string Host { get; set; }
-        public string Path { get; set; }
-        public string File { get; set; }
-    }
-
-    public class Speditor
-    {
-        public string File { get; set; }
-        public string Email { get; set; }
     }
 }
