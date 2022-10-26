@@ -7,9 +7,6 @@ If these is a file ..\Input.txt the program takes the names and emails from it a
 If started with arguments - the first is the user password, the second - filter for the e-mail domain.
 If there is a file ..\CreatedUsers.txt, it takes the names and emails and sorts them in the file ..\UsersSortedByFirstName.txt.
 
-# Common
-Library
-
 # CodeSums
 Add rows to Excel files in subdirectories, Sum data from multiple files
 Търси *.xlxs файлове две директории по-надолу, добавя им заглавия за съответната година и/или месец, след което събира сумите по кодове от всички намерени файлове в съответната директория във файл една директория по-горе.
@@ -23,3 +20,6 @@ Collects the materials SAP No., name, etc. from file Материали-*.xls? a
 # WeightNotes
 Търси *.txt файлове в горната директория и: 1) сумира полетата Всичко Нето във файла Справка по дни.xlsx 2) Събира редовете от всички файлове във Всички m.{Month}.csv.
 3) Maps planned trucks to actual. 4) Sends emails
+
+# Utils
+Library
