@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Globalization;
 using System.Text;
+using Utils;
 
 namespace MaterialsPlanning
 {
@@ -13,7 +14,7 @@ namespace MaterialsPlanning
             string currentDirectory = Environment.CurrentDirectory;
 
             string? materialsFile = Directory.GetFiles(currentDirectory, "Материали*.xls?")?.FirstOrDefault();
-            var tables = Common.Excel.ReadFromExcel<List<DataTable>>(materialsFile);
+            var tables = Excel.ReadFromExcel<List<DataTable>>(materialsFile);
             var materials = Controller.InitializeMaterials(tables);
 
             string mb52File = Directory.GetFiles(currentDirectory, "mb52*.XLS")?.FirstOrDefault()!;
@@ -45,7 +46,7 @@ namespace MaterialsPlanning
                     $"{qtyNeeded * material.Value.PriceLastContract:f2}");
             }
 
-            File.WriteAllText($"{materialsFile?.Substring(0, materialsFile.Length - 4)}-анализ.csv", sb.ToString(), Common.Excel.srcEncoding);
+            File.WriteAllText($"{materialsFile?.Substring(0, materialsFile.Length - 4)}-анализ.csv", sb.ToString(), Excel.srcEncoding);
         }
     }
 }
