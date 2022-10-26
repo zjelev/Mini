@@ -7,7 +7,8 @@ public class Measure
         this.Id = id;
         this.BrutoTime = brutoTime;
     }
-    public Measure(int id, DateTime brutoTime, string tractorNum, string regNum, string driver, string egn, string phone)
+    public Measure(int id, DateTime brutoTime, string tractorNum, 
+        string regNum, string driver, string egn, string phone)
     {
         this.Id = id;
         this.BrutoTime = brutoTime;
@@ -28,11 +29,11 @@ public class Measure
     }
 
     public int Num { get; }
-    public int Id { get; }
-    public DateTime BrutoTime { get;}
+    public int Id { get; set; }
+    public DateTime BrutoTime { get; set; }
     public string RegNum { get;}
-    public int Bruto { get; }
-    public int Tara { get; }
+    public int Bruto { get; set; }
+    public int Tara { get; set; }
 
     public int Neto => Bruto - Tara;
 
