@@ -1,16 +1,17 @@
 ﻿using System.Text;
-using Common;
+using System.Text.Json;
+using Utils;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
 var newVeznaFiles = TextFile.CompareDirs($"\\\\{Config.veznaHost}\\{Config.veznaPath}", Config.veznaFilePattern, Environment.CurrentDirectory, "20*.txt");
+string newFileName = string.Empty;
 foreach (var newVeznaFile in newVeznaFiles)
 {
-    string newFileName = Controller.SetFileName(newVeznaFile.FullName);
+    newFileName = Controller.SetFileName(newVeznaFile.FullName);
     File.Copy(newVeznaFile.FullName, newFileName, true);
-    TextFile.Log("Справката за деня беше копирана от " + newVeznaFile.FullName + " в " + newFileName, Config.logPath);
+    TextFile.Log("### Справката за деня беше копирана от " + newVeznaFile.FullName + " в " + newFileName, Config.logPath);
 }
-
 
 var files = Directory.GetFiles(Environment.CurrentDirectory, "*.TXT").Where(name => !name.EndsWith("на.TXT"));
 Dictionary<int, Measure> measures = new Dictionary<int, Measure>();
@@ -28,44 +29,55 @@ foreach (var file in files)
 }
 measures = measures.OrderBy(m => m.Key).ToDictionary(m => m.Key, m => m.Value);
 
-Controller.FillGeologInfo(measures, "Справка по смени.xlsx");
+Controller.FillGeologInfo(measures);
 
-string allMeasuresFile = "Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month + ".csv";
-Controller.FillAllMeasures(measures, allMeasuresFile);
+string allMeasuresFile = Controller.FillAllMeasures(measures);
 
-StringBuilder missingNotes = new StringBuilder();
-missingNotes.AppendLine("Дата;Номер");
-int firstId = measures.FirstOrDefault().Key;
-int countId = firstId - 1;
-foreach (var measure in measures)
+string missingNotesFile = Controller.FillMissingNotes(measures);
+
+string filledPlan = Controller.FillPlan(measures);
+
+if (args.Length > 1)
 {
-    countId++;
-    if (measure.Key != countId)
+    try
     {
-        while (measure.Key != countId)
+        string passwd = args[0];
+        string recipient = args[1];
+        string senderName = JsonSerializer.Deserialize<ConfigEmail>(Config.config).User.Name;
+        if (missingNotesFile != string.Empty)
         {
-            Measure missingMeasure = new Measure(countId, measure.Value.BrutoTime);
-            missingNotes.AppendLine($"{missingMeasure.BrutoTime.ToString("dd.MM.yyyy")};{countId}");
-            countId++;
+            Email.Send(Config.config, passwd, recipient, new List<string>(),
+                "Липсващи кантарни бележки за месеца", "Поздрави,\n" + senderName, new string[] { missingNotesFile });
+            
+            TextFile.Log("### Изпратена справка за липсващи бележки", Config.logPath);
+        }
+        
+        List<string> ccRecipients = new List<string>();
+
+        if (args.Length > 2)
+        {
+            for (int i = 2; i < args.Length; i++)
+            {
+                ccRecipients.Add(args[i]);
+            }
+        }
+
+        StringBuilder body = new StringBuilder();
+        body.AppendLine("Това е автоматично генериран е-мейл.");
+
+        if (allMeasuresFile != string.Empty)
+        {
+            string log = "### Изпратен е-мейл до спедитори";
+            Email.Send(Config.config, passwd, recipient, ccRecipients, "Справка автовезна р-к 3", body.ToString(),
+                new string[] { newFileName, filledPlan });
+            Email.Send(Config.config, passwd, "admin@admin", new List<string>(), log, 
+                measures.LastOrDefault().Key + " - " + measures.LastOrDefault().Value.BrutoTime.ToString("dd.MM HH:mm"), 
+                new string[] {});
+            TextFile.Log(log, Config.logPath);
         }
     }
+    catch (System.Exception e)
+    {
+        TextFile.Log(e.Message, Config.logPath);
+    }
 }
-string missingNotesFile = Config.logPath + "Липсващи бележки.csv";
-TextFile.SaveNew(Config.logPath, missingNotes, missingNotesFile);
-
-// string lastMissingNote = missingNotes.Remove(0, missingNotes.Length - 17).ToString().Substring(0, 10);
-// if (DateTime.Now.Date.ToString("dd.MM.yyyy").Equals(lastMissingNote) && args.Length == 2)
-// {
-//     try
-//     {
-//         string passwd = args[0];
-//         string senderName = JsonSerializer.Deserialize<ConfigWeightNotes>(config).User.Name;
-//         // Email.Send(passwd, args[1], new List<string>(),
-//         //     "Липсващи кантарни бележки за месеца", "Поздрави,\n" + senderName, new string[] { missingMeasuresFile });
-//         TextFile.Log("Изпратена справка за липсващи бележки", logPath);
-//     }
-//     catch (System.Exception e)
-//     {
-//         TextFile.Log(e.Message, logPath);
-//     }
-// }
