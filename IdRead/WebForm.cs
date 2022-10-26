@@ -1,4 +1,4 @@
-using Common;
+using Utils;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
@@ -22,12 +22,12 @@ namespace IdRead
 
                 //Add your MVC project URL
                 var config = File.ReadAllText("..\\WeightNotes\\config.json");
-                string? host = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Host;
-                string? server = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.SmtpServer.Domain;
+                string? host = System.Text.Json.JsonSerializer.Deserialize<ConfigEmail>(config)?.SmtpServer.Host;
+                string? server = System.Text.Json.JsonSerializer.Deserialize<ConfigEmail>(config)?.SmtpServer.Domain;
                 driver.Navigate().GoToUrl("https://web" + host + "." + server);
 
                 //Add your textbox id
-                string? account = System.Text.Json.JsonSerializer.Deserialize<ConfigWeightNotes>(config)?.User.Account;
+                string? account = System.Text.Json.JsonSerializer.Deserialize<ConfigEmail>(config)?.User.Account;
                 driver.FindElement(By.Id("rcmloginuser")).SendKeys(account);
                 driver.FindElement(By.Id("rcmloginpwd")).SendKeys(pass);
 
