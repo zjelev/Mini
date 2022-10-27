@@ -144,10 +144,10 @@ class Controller
     internal static string FillAllMeasures(Dictionary<int, Measure> measures)
     {
         StringBuilder allMeasures = new StringBuilder();
-        allMeasures.AppendLine("No. ; Дата ; Ремарке ; Доставчик ; Място на разтоварване ; Клиент ; Вид товар ; Бруто kg ; Кант. бележка № ; Нето kg");
+        allMeasures.AppendLine("No.;Дата;Ремарке;Доставчик;Място на разтоварване;Клиент;Вид товар;Бруто kg;Кант. бележка №;Нето kg;Време бруто");
         foreach (var measure in measures)
         {
-            allMeasures.AppendLine($"{measure.Value.TimeRegNum} ; {Config.clientInfo} ; {measure.Value.BrutoNeto}");
+            allMeasures.AppendLine($"{measure.Value.TimeRegNum};{Config.clientInfo};{measure.Value.BrutoNeto};{measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)}");
         }
 
         // using (ExcelPackage package = new ExcelPackage(new FileInfo("Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month + ".xlsx")))
@@ -380,7 +380,6 @@ class Controller
                     else if (truck.BrutoTime >= DateTime.Now.AddDays(-1))
                     {
                         string warning = ($"Ремарке с № {truck.RegNum} е планирано повече от 1 път за {truck.BrutoTime.Date.ToString("dd.M.yyyy")}");
-                        TextFile.Log(warning, Config.logPath);
                         warnings.Add(warning);
                     }
                 }
