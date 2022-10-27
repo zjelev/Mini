@@ -2,7 +2,7 @@ using System.Text.Json;
 
 public class Config
 {
-    internal static string logPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "AvtoveznaMonthly" + Path.DirectorySeparatorChar;
+    internal static string logPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar;
     internal static string config = File.ReadAllText(logPath + "config.json");
     internal static string veznaHost = JsonSerializer.Deserialize<Config>(config).Vezna.Host;
     internal static string veznaPath = JsonSerializer.Deserialize<Config>(config).Vezna.Path;
