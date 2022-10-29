@@ -2,8 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Text;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
 using OfficeOpenXml;
+
 // using NPOI.XSSF.UserModel;
 // using NPOI.HSSF.UserModel;
 // using NPOI.SS.UserModel;
@@ -13,7 +18,7 @@ namespace Utils
     public class Excel
     {
         public static Encoding srcEncoding = Encoding.GetEncoding("windows-1251");
-        
+
         // public IWorkbook ReadExcelWorkbook(string path)
         // {
         //     IWorkbook book;
@@ -95,6 +100,102 @@ namespace Utils
                     ;
                 return (T)Convert.ChangeType(generatedType, typeof(T));
             }
+        }
+
+        public static bool SaveNew(string logPath, FileInfo oldFile, string newInfo)
+        {
+            if (File.Exists(oldFile.FullName))
+            {
+                var oldTable = Import(oldFile.FullName);
+                var newTable = Import(newInfo);
+                if (AreTablesTheSame(oldTable, newTable))
+                {
+                    //File.WriteAllText(oldFile.FullName, newInfo);
+                    TextFile.Log($" ### Файлът {oldFile.Name} беше обновен.", logPath);
+                    return true;
+                }
+                else
+                {
+                    TextFile.Log($"Няма нова информация. Файлът {oldFile.Name} не беше обновен.", logPath);
+                    return false;
+                }
+            }
+            else
+            {
+                //File.WriteAllText(oldFile.FullName, newInfo);
+                TextFile.Log($" ### Файлът {oldFile.Name} беше създаден.", logPath);
+            }
+
+            return true;
+        }
+
+        public static DataTable Import(string fileName)
+        {
+            using (SpreadsheetDocument doc = SpreadsheetDocument.Open(fileName, false))
+            {
+                Sheet sheet = doc.WorkbookPart.Workbook.Sheets.GetFirstChild<Sheet>();  //Read the first Sheet from Excel file.
+
+                Worksheet worksheet = (doc.WorkbookPart.GetPartById(sheet.Id.Value) as WorksheetPart).Worksheet; //Get the Worksheet instance.
+
+                IEnumerable<Row> rows = worksheet.GetFirstChild<SheetData>().Descendants<Row>(); //Fetch all the rows present in the Worksheet.
+
+                // Create a new DataTable.
+                DataTable dt = new DataTable();
+
+                //Loop through the Worksheet rows.
+                foreach (Row row in rows)
+                {
+                    //Use the first row to add columns to DataTable.
+                    if (row.RowIndex.Value == 1)
+                    {
+                        foreach (Cell cell in row.Descendants<Cell>())
+                        {
+                            dt.Columns.Add(GetValue(doc, cell));
+                        }
+                    }
+                    else
+                    {
+                        //Add rows to DataTable.
+                        dt.Rows.Add();
+                        int i = 0;
+                        foreach (Cell cell in row.Descendants<Cell>())
+                        {
+                            dt.Rows[dt.Rows.Count - 1][i] = (GetValue(doc, cell));
+                            i++;
+                        }
+                    }
+                }
+                // GridView1.DataSource = dt;
+                // GridView1.DataBind();
+                return dt;
+            }
+        }
+
+        private static string GetValue(SpreadsheetDocument doc, Cell cell)
+        {
+            string? value = cell.CellValue?.InnerText;
+            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
+            {
+                return doc.WorkbookPart.SharedStringTablePart.SharedStringTable.ChildElements.GetItem(int.Parse(value)).InnerText;
+            }
+            return value;
+        }
+
+        private static bool AreTablesTheSame(DataTable tbl1, DataTable tbl2)
+        {
+            if (tbl1.Rows.Count != tbl2.Rows.Count || tbl1.Columns.Count != tbl2.Columns.Count)
+                return false;
+
+
+            for (int i = 0; i < tbl1.Rows.Count; i++)
+            {
+                for (int c = 0; c < tbl1.Columns.Count; c++)
+                {
+                    if (!Equals(tbl1.Rows[i][c], tbl2.Rows[i][c]))
+                        return false;
+                }
+            }
+            return true;
         }
     }
 }
