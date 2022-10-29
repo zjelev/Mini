@@ -193,11 +193,14 @@ namespace Utils
             }
             return newFileName;
         }
+
+        public static string SaveNew(StringBuilder sb, string file)
+        {
+            return SaveNew(Environment.CurrentDirectory, sb, file);
+        }
     }
 
-    // This implementation defines a very simple comparison  
-    // between two FileInfo objects. It only compares the name  
-    // of the files being compared and their length in bytes.  
+    // This implementation defines a simple comparison between two FileInfo objects. It compares their last write time and their length in bytes.  
     class FileCompare : IEqualityComparer<FileInfo>
     {
         public FileCompare() { }
@@ -208,11 +211,9 @@ namespace Utils
                     f1.Length == f2.Length);
         }
 
-        // Return a hash that reflects the comparison criteria. According to the
-        // rules for IEqualityComparer<T>, if Equals is true, then the hash codes must  
-        // also be equal. Because equality as defined here is a simple value equality, not  
-        // reference identity, it is possible that two or more objects will produce the same  
-        // hash code.  
+        // Return a hash that reflects the comparison criteria. According to the rules for IEqualityComparer<T>, if Equals is true,
+        // then the hash codes must also be equal. Because equality as defined here is a simple value equality, not reference identity,
+        // it is possible that two or more objects will produce the same hash code.  
         public int GetHashCode(FileInfo fi)
         {
             string s = $"{fi.LastWriteTime}{fi.Length}";
