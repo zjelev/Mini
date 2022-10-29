@@ -4,6 +4,8 @@ using System.Text;
 using Utils;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 
 class Controller
 {
@@ -143,47 +145,84 @@ class Controller
 
     internal static string FillAllMeasures(Dictionary<int, Measure> measures)
     {
+        string header = "No.;Дата;Ремарке;Доставчик;Дестинация;Клиент;Вид товар;Бруто kg;Кант.бел.№;Нето kg;Време бруто";
+        
         StringBuilder allMeasures = new StringBuilder();
-        allMeasures.AppendLine("No.;Дата;Ремарке;Доставчик;Място на разтоварване;Клиент;Вид товар;Бруто kg;Кант. бележка №;Нето kg;Време бруто");
+        allMeasures.AppendLine(header);
         foreach (var measure in measures)
         {
-            allMeasures.AppendLine($"{measure.Value.TimeRegNum};{Config.clientInfo};{measure.Value.BrutoNeto};{measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)}");
+            allMeasures.AppendLine($"{measure.Value.TimeRegNum};{Config.supplier};{Config.destination};{Config.client};{Config.load};" + 
+                            $"{measure.Value.BrutoNeto};{measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)}");
         }
 
-        // using (ExcelPackage package = new ExcelPackage(new FileInfo("Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month + ".xlsx")))
+        string fileName = "Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month;
+        return TextFile.SaveNew(Config.logPath, allMeasures, fileName + ".csv");
+        
+        // string fileNameXlsx = fileName + ".xlsx-temp";
+
+        // using (var fs = new FileStream(fileNameXlsx, FileMode.Create, FileAccess.Write))
         // {
-        //     while (package.Workbook.Worksheets.Count > 0)
+        //     IWorkbook workbook = new XSSFWorkbook();
+        //     ISheet sheet1 = workbook.CreateSheet("м." + measures.FirstOrDefault().Value.BrutoTime.Month);
+            
+        //     string[] headerSplit = header.Split(";", StringSplitOptions.RemoveEmptyEntries);
+            
+        //     var rowIndex = 0;
+        //     IRow currentRow = sheet1.CreateRow(rowIndex);
+        //     for (int col = 0; col <= 10; col++)
         //     {
-        //         package.Workbook.Worksheets.Delete(0);
+        //         currentRow.CreateCell(col).SetCellValue(headerSplit[col]);
         //     }
-        //     ExcelWorksheet ws = package.Workbook.Worksheets.Add("м." + measures.FirstOrDefault().Value.BrutoTime.Month);
-        //     var format = new ExcelTextFormat();
-        //     format.Delimiter = ';';
-        //     ws.Column(1).Width = 4;
-        //     ws.Column(2).Width = 9;
-        //     ws.Column(3).Width = 11;
-        //     ws.Column(4).Width = 18;
-        //     ws.Column(5).Width = 23;
-        //     ws.Column(6).Width = 18;
-        //     ws.Column(7).Width = 24;
-        //     ws.Column(8).Width = 9;
-        //     ws.Column(9).Width = 18;
-        //     ws.Column(10).Width = 8;
-        //     ws.Cells.AutoFitColumns();
 
-        //     // Thread.CurrentThread.CurrentCulture = new CultureInfo("bg-BG")
-        //     // {
-        //     //     DateTimeFormat = { ShortDatePattern = "dd/MM/yy" }
-        //     // };
-        //     // ws.Column(2).Style.Numberformat.Format = DateTimeFormatInfo.CurrentInfo.YearMonthPattern;
-        //     //ws.Column(2).Style.Numberformat.Format = "dd.MM.yy";
-        //     //ws.Cells["A1:A2000"].Style.Numberformat.Format = "@";
+        //     rowIndex++;
+        //     foreach (var measure in measures)
+        //     {
+        //         currentRow = sheet1.CreateRow(rowIndex);
+        //         currentRow.CreateCell(0).SetCellValue(measure.Value.Num);
+        //         currentRow.CreateCell(1).SetCellValue(measure.Value.BrutoTime.ToString("dd/MM/yy", CultureInfo.InvariantCulture));
+        //         currentRow.CreateCell(2).SetCellValue(measure.Value.RegNum);
+        //         currentRow.CreateCell(3).SetCellValue(Config.supplier);
+        //         currentRow.CreateCell(4).SetCellValue(Config.destination);
+        //         currentRow.CreateCell(5).SetCellValue(Config.client);
+        //         currentRow.CreateCell(6).SetCellValue(Config.load);
+        //         currentRow.CreateCell(7).SetCellValue(measure.Value.Bruto);
+        //         currentRow.CreateCell(8).SetCellValue(measure.Value.Id);
+        //         currentRow.CreateCell(9).SetCellValue(measure.Value.Bruto - measure.Value.Tara);
+        //         currentRow.CreateCell(10).SetCellValue(measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture));
+        //         rowIndex++;
+        //     }
 
-        //     ws.Cells["A1"].LoadFromText(allMeasures.ToString(), format);
-        //     package.Save();
+        //     for (int col = 0; col <= 10; col++)
+        //     {
+        //         sheet1.AutoSizeColumn(col);
+        //     }
+
+        //     // sheet1.AddMergedRegion(new CellRangeAddress(0, 0, 0, 10));
+        //     // row.Height = 30 * 80;
+        //     // row.CreateCell(0).SetCellValue("this is content");
+        //     // sheet1.AutoSizeColumn(0);
+        //     // rowIndex++;
+
+        //     // var sheet2 = workbook.CreateSheet("Sheet2");
+        //     // var style1 = workbook.CreateCellStyle();
+        //     // style1.FillForegroundColor = HSSFColor.Blue.Index2;
+        //     // style1.FillPattern = FillPattern.SolidForeground;
+
+        //     // var style2 = workbook.CreateCellStyle();
+        //     // style2.FillForegroundColor = HSSFColor.Yellow.Index2;
+        //     // style2.FillPattern = FillPattern.SolidForeground;
+
+        //     // var cell2 = sheet2.CreateRow(0).CreateCell(0);
+        //     // cell2.CellStyle = style1;
+        //     // cell2.SetCellValue(0);
+
+        //     workbook.Write(fs);
         // }
 
-        return TextFile.SaveNew(Config.logPath, allMeasures, "Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month + ".csv");
+        // // var fileInfo = new FileInfo(fileNameXlsx);
+        // // return Excel.SaveNew(Config.logPath, fileInfo);
+
+        
     }
 
     internal static string FillMissingNotes(Dictionary<int, Measure> measures)
@@ -288,14 +327,14 @@ class Controller
                             TextFile.Log($"{ws.Name} - No. {++knfeCounter}: {knfe.Message}", Config.logPath);
                         }
                         dataTable.Rows.Add(truckInfo.Value.Id, truckInfo.Value.TractorNum, truckInfo.Key,
-                                    truckInfo.Value.Driver, truckInfo.Value.Egn, truckInfo.Value.Phone, 
+                                    truckInfo.Value.Driver, truckInfo.Value.Egn, truckInfo.Value.Phone,
                                     truckInfo.Value.Bruto - truckInfo.Value.Tara, truckInfo.Value.BrutoTime.ToString("HH:mm"));
                     }
 
                     foreach (var measure in measuresCurrentDay)
                     {
                         dataTable.Rows.Add(measure.Value.Id, measure.Value.TractorNum, measure.Value.RegNum,
-                                    measure.Value.Driver, measure.Value.Egn, measure.Value.Phone, 
+                                    measure.Value.Driver, measure.Value.Egn, measure.Value.Phone,
                                     measure.Value.Bruto - measure.Value.Tara, measure.Value.BrutoTime.ToString("HH:mm"));
                         countFilled++;
                     }
