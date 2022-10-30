@@ -175,6 +175,7 @@ class Controller
             for (int col = 0; col <= 10; col++)
             {
                 currentRow.CreateCell(col).SetCellValue(headerSplit[col]);
+                // sheet1.AutoSizeColumn(col); // throws FileNotFoundException: Could not load file or assembly 'System.Drawing.Common, Version=4.0.0.0,
             }
 
             rowIndex++;
@@ -193,11 +194,6 @@ class Controller
                 currentRow.CreateCell(9).SetCellValue(measure.Value.Bruto - measure.Value.Tara);
                 currentRow.CreateCell(10).SetCellValue(measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture));
                 rowIndex++;
-            }
-
-            for (int col = 0; col <= 10; col++)
-            {
-                sheet1.AutoSizeColumn(col);
             }
 
             // sheet1.AddMergedRegion(new CellRangeAddress(0, 0, 0, 10));
@@ -382,7 +378,7 @@ class Controller
         else
         {
             TextFile.Log("За днес не са планирани камиони.", Config.logPath);
-            return string.Empty;
+            return null;
         }
     }
 
