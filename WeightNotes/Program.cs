@@ -67,16 +67,14 @@ if (newVeznaFiles.Count() > 0)
             StringBuilder body = new StringBuilder();
             body.AppendLine("Това е автоматично генериран е-мейл.");
 
-            // if (newFileName != string.Empty)
-            // {
             Email.Send(Config.config, passwd, recipient, ccRecipients, "Справка автовезна р-к 3", body.ToString(),
-                new string[] { newFileName, Controller.FillPlan(measures) });
+               newFileName, Controller.FillPlan(measures));
             string log = "### Изпратен е-мейл до спедитори";
-            Email.Send(Config.config, passwd, "admin@mail", new List<string>(), log,
-                measures.LastOrDefault().Key + " - " + measures.LastOrDefault().Value.BrutoTime.ToString("dd.MM HH:mm"),
-                new string[] { });
+            string account = JsonSerializer.Deserialize<ConfigEmail>(Config.config).User.Account;
+            account = account.Substring(0, account.IndexOf('.'));
+            Email.Send(Config.config, passwd, account + "@abv.bg", new List<string>(), log,
+                measures.LastOrDefault().Key + " - " + measures.LastOrDefault().Value.BrutoTime.ToString("dd.MM HH:mm"));
             TextFile.Log(log, Config.logPath);
-            // }
         }
         catch (System.Exception e)
         {
