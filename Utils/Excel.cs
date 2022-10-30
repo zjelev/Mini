@@ -52,7 +52,7 @@ namespace Utils
         //     }
         // }
 
-        public static T ReadFromExcel<T>(string path, bool hasHeader = true)
+        public static T ReadWithEPPlus<T>(string path, bool hasHeader = true)
         {
             using (var excelPack = new ExcelPackage())
             {
@@ -102,34 +102,7 @@ namespace Utils
             }
         }
 
-        public static bool SaveNew(string logPath, FileInfo oldFile, string newInfo)
-        {
-            if (File.Exists(oldFile.FullName))
-            {
-                var oldTable = Import(oldFile.FullName);
-                var newTable = Import(newInfo);
-                if (AreTablesTheSame(oldTable, newTable))
-                {
-                    //File.WriteAllText(oldFile.FullName, newInfo);
-                    TextFile.Log($" ### Файлът {oldFile.Name} беше обновен.", logPath);
-                    return true;
-                }
-                else
-                {
-                    TextFile.Log($"Няма нова информация. Файлът {oldFile.Name} не беше обновен.", logPath);
-                    return false;
-                }
-            }
-            else
-            {
-                //File.WriteAllText(oldFile.FullName, newInfo);
-                TextFile.Log($" ### Файлът {oldFile.Name} беше създаден.", logPath);
-            }
-
-            return true;
-        }
-
-        public static DataTable Import(string fileName)
+        public static DataTable ReadWithOpenXml(string fileName)
         {
             using (SpreadsheetDocument doc = SpreadsheetDocument.Open(fileName, false))
             {
@@ -181,17 +154,16 @@ namespace Utils
             return value;
         }
 
-        private static bool AreTablesTheSame(DataTable tbl1, DataTable tbl2)
+        public static bool AreTablesTheSame(DataTable tbl1, DataTable tbl2)
         {
             if (tbl1.Rows.Count != tbl2.Rows.Count || tbl1.Columns.Count != tbl2.Columns.Count)
                 return false;
 
-
-            for (int i = 0; i < tbl1.Rows.Count; i++)
+            for (int row = 0; row < tbl1.Rows.Count; row++)
             {
-                for (int c = 0; c < tbl1.Columns.Count; c++)
+                for (int col = 0; col < tbl1.Columns.Count; col++)
                 {
-                    if (!Equals(tbl1.Rows[i][c], tbl2.Rows[i][c]))
+                    if (!Equals(tbl1.Rows[row][col], tbl2.Rows[row][col]))
                         return false;
                 }
             }
