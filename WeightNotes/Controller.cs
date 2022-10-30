@@ -161,87 +161,67 @@ class Controller
 
     internal static void FillAllMeasures(Dictionary<int, Measure> measures, string fileNameXlsx)
     {
-        DataTable oldMeasures = Excel.ReadWithEPPlus<DataTable>(fileNameXlsx);
-        DataTable newMeasures = ConvertMeasures(measures);
+        string header = "No.;Дата;Ремарке;Доставчик;Дестинация;Клиент;Вид товар;Бруто kg;Кант.бел.№;Нето kg;Време бруто";
 
-        if (!Excel.AreTablesTheSame(oldMeasures, newMeasures))
+        using (var fs = new FileStream(fileNameXlsx, FileMode.Create, FileAccess.Write))
         {
-            string header = "No.;Дата;Ремарке;Доставчик;Дестинация;Клиент;Вид товар;Бруто kg;Кант.бел.№;Нето kg;Време бруто";
+            IWorkbook workbook = new XSSFWorkbook();
+            ISheet sheet1 = workbook.CreateSheet("м." + measures.FirstOrDefault().Value.BrutoTime.Month);
 
-            using (var fs = new FileStream(fileNameXlsx, FileMode.Create, FileAccess.Write))
+            string[] headerSplit = header.Split(";", StringSplitOptions.RemoveEmptyEntries);
+
+            var rowIndex = 0;
+            IRow currentRow = sheet1.CreateRow(rowIndex);
+            for (int col = 0; col <= 10; col++)
             {
-                IWorkbook workbook = new XSSFWorkbook();
-                ISheet sheet1 = workbook.CreateSheet("м." + measures.FirstOrDefault().Value.BrutoTime.Month);
-
-                string[] headerSplit = header.Split(";", StringSplitOptions.RemoveEmptyEntries);
-
-                var rowIndex = 0;
-                IRow currentRow = sheet1.CreateRow(rowIndex);
-                for (int col = 0; col <= 10; col++)
-                {
-                    currentRow.CreateCell(col).SetCellValue(headerSplit[col]);
-                }
-
-                rowIndex++;
-                foreach (var measure in measures)
-                {
-                    currentRow = sheet1.CreateRow(rowIndex);
-                    currentRow.CreateCell(0).SetCellValue(measure.Value.Num);
-                    currentRow.CreateCell(1).SetCellValue(measure.Value.BrutoTime.ToString("dd/MM/yy", CultureInfo.InvariantCulture));
-                    currentRow.CreateCell(2).SetCellValue(measure.Value.RegNum);
-                    currentRow.CreateCell(3).SetCellValue(Config.supplier);
-                    currentRow.CreateCell(4).SetCellValue(Config.destination);
-                    currentRow.CreateCell(5).SetCellValue(Config.client);
-                    currentRow.CreateCell(6).SetCellValue(Config.load);
-                    currentRow.CreateCell(7).SetCellValue(measure.Value.Bruto);
-                    currentRow.CreateCell(8).SetCellValue(measure.Value.Id);
-                    currentRow.CreateCell(9).SetCellValue(measure.Value.Bruto - measure.Value.Tara);
-                    currentRow.CreateCell(10).SetCellValue(measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture));
-                    rowIndex++;
-                }
-
-                for (int col = 0; col <= 10; col++)
-                {
-                    sheet1.AutoSizeColumn(col);
-                }
-
-                // sheet1.AddMergedRegion(new CellRangeAddress(0, 0, 0, 10));
-                // row.Height = 30 * 80;
-                // row.CreateCell(0).SetCellValue("this is content");
-                // sheet1.AutoSizeColumn(0);
-                // rowIndex++;
-
-                // var sheet2 = workbook.CreateSheet("Sheet2");
-                // var style1 = workbook.CreateCellStyle();
-                // style1.FillForegroundColor = HSSFColor.Blue.Index2;
-                // style1.FillPattern = FillPattern.SolidForeground;
-
-                // var style2 = workbook.CreateCellStyle();
-                // style2.FillForegroundColor = HSSFColor.Yellow.Index2;
-                // style2.FillPattern = FillPattern.SolidForeground;
-
-                // var cell2 = sheet2.CreateRow(0).CreateCell(0);
-                // cell2.CellStyle = style1;
-                // cell2.SetCellValue(0);
-
-                workbook.Write(fs);
-                TextFile.Log($"Файлът {fileNameXlsx} е обновен", Config.logPath);
+                currentRow.CreateCell(col).SetCellValue(headerSplit[col]);
             }
-        }
-        else
-        {
-            TextFile.Log("Няма нова информация", Config.logPath);
-        }
-    }
 
-    private static DataTable ConvertMeasures(Dictionary<int, Measure> measures)
-    {
-        throw new NotImplementedException();
-    }
+            rowIndex++;
+            foreach (var measure in measures)
+            {
+                currentRow = sheet1.CreateRow(rowIndex);
+                currentRow.CreateCell(0).SetCellValue(measure.Value.Num);
+                currentRow.CreateCell(1).SetCellValue(measure.Value.BrutoTime.ToString("dd/MM/yy", CultureInfo.InvariantCulture));
+                currentRow.CreateCell(2).SetCellValue(measure.Value.RegNum);
+                currentRow.CreateCell(3).SetCellValue(Config.supplier);
+                currentRow.CreateCell(4).SetCellValue(Config.destination);
+                currentRow.CreateCell(5).SetCellValue(Config.client);
+                currentRow.CreateCell(6).SetCellValue(Config.load);
+                currentRow.CreateCell(7).SetCellValue(measure.Value.Bruto);
+                currentRow.CreateCell(8).SetCellValue(measure.Value.Id);
+                currentRow.CreateCell(9).SetCellValue(measure.Value.Bruto - measure.Value.Tara);
+                currentRow.CreateCell(10).SetCellValue(measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture));
+                rowIndex++;
+            }
 
-    internal static Dictionary<int, Measure> GetAllMeasures(string fileNameXlsx)
-    {
-        return null!;
+            for (int col = 0; col <= 10; col++)
+            {
+                sheet1.AutoSizeColumn(col);
+            }
+
+            // sheet1.AddMergedRegion(new CellRangeAddress(0, 0, 0, 10));
+            // row.Height = 30 * 80;
+            // row.CreateCell(0).SetCellValue("this is content");
+            // sheet1.AutoSizeColumn(0);
+            // rowIndex++;
+
+            // var sheet2 = workbook.CreateSheet("Sheet2");
+            // var style1 = workbook.CreateCellStyle();
+            // style1.FillForegroundColor = HSSFColor.Blue.Index2;
+            // style1.FillPattern = FillPattern.SolidForeground;
+
+            // var style2 = workbook.CreateCellStyle();
+            // style2.FillForegroundColor = HSSFColor.Yellow.Index2;
+            // style2.FillPattern = FillPattern.SolidForeground;
+
+            // var cell2 = sheet2.CreateRow(0).CreateCell(0);
+            // cell2.CellStyle = style1;
+            // cell2.SetCellValue(0);
+
+            workbook.Write(fs);
+            TextFile.Log($"Файлът {fileNameXlsx} е обновен", Config.logPath);
+        }
     }
 
     internal static string FillMissingNotes(Dictionary<int, Measure> measures)
