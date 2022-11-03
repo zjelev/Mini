@@ -24,6 +24,8 @@ namespace Utils
         public string Name { get; set; }
         public string Account { get; set; }
         public string Phone { get; set; }
+        public string Password { get; set; }
+        public string Position { get; set; }
     }
 
     public class SmtpServer
