@@ -7,7 +7,7 @@ namespace Utils
 {
     public class Email
     {
-        public static void Send(string config, string passwd, string recipient, List<string> ccRecipients, string subject, string body, string[] attachments)
+        public static void Send(string config, string passwd, string recipient, List<string> ccRecipients, string subject, string body, params string[] attachments)
         {
             string mailServer = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Host;
             string domain = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Domain;
@@ -40,8 +40,11 @@ namespace Utils
 
             foreach (var attach in attachments)
             {
-                Attachment attachment = new Attachment(attach);
-                mail.Attachments.Add(attachment);
+                if (attach != null)
+                {
+                    Attachment attachment = new Attachment(attach);
+                    mail.Attachments.Add(attachment);
+                }
             }
 
             smtpServer.Port = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Port;
