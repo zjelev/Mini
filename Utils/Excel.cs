@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Text;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -16,6 +13,7 @@ namespace Utils
     public class Excel
     {
         public static Encoding srcEncoding = Encoding.GetEncoding("windows-1251");
+        public static Encoding destEncoding = Encoding.UTF8;
 
         // public IWorkbook ReadWithNpoi(string path)
         // {

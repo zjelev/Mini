@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -9,25 +5,64 @@ namespace Utils
 {
     public class TextFile
     {
-        public static void GetHeaderFromLeon(string file, out string fileName, out int year, out string month, out string podName, out string podNumberStr)
-        {
-            fileName = Path.GetFileName(file);
-            year = int.Parse(fileName.Substring(0, 4));
-            month = fileName.Substring(4, 2) + ".";
-            podName = String.Empty;
-            podNumberStr = fileName[fileName.Length - 6].ToString();
-            if (Int32.TryParse(podNumberStr, out int podNumber))
-            {
-                podName = "РУДНИК ТРОЯНОВО-";
-            }
-            else
-            {
-                podNumberStr = "УПРАВЛЕНИЕ";
-            }
 
-            if (podNumberStr == "2")
+        // devblogs.microsoft.com/buckh/converting-a-text-file-from-one-encoding-to-another/
+        public static void ConvertFile(string sourcePath, string destPath, string srcEncoding, string dstEncoding)
+        {
+            Encoding sourceEncoding = Encoding.GetEncoding(srcEncoding);
+            Encoding destEncoding = Encoding.GetEncoding(dstEncoding);
+            String parent = Path.GetDirectoryName(Path.GetFullPath(destPath));
+            if (!Directory.Exists(parent))
             {
-                podNumberStr = "СЕВЕР";
+                Directory.CreateDirectory(parent);
+            }
+            // If the source and destination encodings are the same, just copy the file.
+            if (sourceEncoding == destEncoding)
+            {
+                File.Copy(sourcePath, destPath, true);
+                return;
+            }
+            // Convert the file.
+            String tempName = null;
+            try
+            {
+                tempName = Path.GetTempFileName();
+                using (StreamReader sr = new StreamReader(sourcePath, sourceEncoding, false))
+                {
+                    using (StreamWriter sw = new StreamWriter(tempName, false, destEncoding))
+                    {
+                        int charsRead;
+                        char[] buffer = new char[128 * 1024];
+                        while ((charsRead = sr.ReadBlock(buffer, 0, buffer.Length)) > 0)
+                        {
+                            sw.Write(buffer, 0, charsRead);
+                        }
+                    }
+                }
+                File.Delete(destPath);
+                File.Move(tempName, destPath);
+            }
+            finally
+            {
+                File.Delete(tempName);
+            }
+        }
+
+        // stackoverflow.com/questions/29086612/convert-text-file-to-excel
+        public static void ConvertToCsv(string[] sourcefile, string destfile)
+        {
+            using (StreamWriter csvfile = new StreamWriter(destfile))
+            {
+                string[] lines, cells;
+                lines = sourcefile; //File.ReadAllLines(sourcefile);
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    cells = lines[i].Split(new Char[] { '\t', ';', ' ' });
+                    for (int j = 0; j < cells.Length; j++)
+                        csvfile.Write(cells[j] + ",");
+                    csvfile.WriteLine();
+                }
             }
         }
 
