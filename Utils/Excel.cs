@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
 using System.Text;
-using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OfficeOpenXml;
@@ -19,7 +17,7 @@ namespace Utils
     {
         public static Encoding srcEncoding = Encoding.GetEncoding("windows-1251");
 
-        // public IWorkbook ReadExcelWorkbook(string path)
+        // public IWorkbook ReadWithNpoi(string path)
         // {
         //     IWorkbook book;
 
