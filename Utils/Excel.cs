@@ -2,11 +2,9 @@ using System.Data;
 using System.Text;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
 using OfficeOpenXml;
-
-// using NPOI.XSSF.UserModel;
-// using NPOI.HSSF.UserModel;
-// using NPOI.SS.UserModel;
 
 namespace Utils
 {
@@ -164,6 +162,55 @@ namespace Utils
                 }
             }
             return true;
+        }
+
+        public static void ConvertFromCsvWithNpoi(string fileName, char splitter)
+        {
+            var newFileName = Path.ChangeExtension(fileName, ".xlsx");
+            string[] lines = File.ReadAllLines(fileName, Encoding.UTF8);
+
+            IWorkbook workbook = new XSSFWorkbook();
+            var sheet = workbook.CreateSheet(Path.GetFileName(newFileName));
+            ICellStyle alignRight = workbook.CreateCellStyle();
+            var rowIndex = 0;
+
+            foreach (string line in lines)
+            {
+                var row = sheet.CreateRow(rowIndex);
+
+                string[] lineStr = line.Trim().Split(splitter);
+
+                for (int i = 0; i < lineStr.Length; i++)
+                {
+                    string data = String.IsNullOrEmpty(line) ? string.Empty : lineStr[i].Trim();
+                    //rowExcel.CreateCell(i).SetCellType(NPOI.SS.UserModel.CellType.String);
+                    double sum = 0;
+                    if (double.TryParse(data, out sum))
+                    {
+                        row.CreateCell(i).SetCellValue(sum);
+                    }
+                    else
+                    {
+                        row.CreateCell(i).SetCellValue(data);
+                        if (data.EndsWith('%'))
+                        {
+                            alignRight.Alignment = HorizontalAlignment.Right;
+                            row.GetCell(i).CellStyle = alignRight;
+                        }
+                    }
+                }
+
+                rowIndex++;
+            }
+
+            for (var i = 0; i < sheet.GetRow(0).LastCellNum; i++)
+                sheet.AutoSizeColumn(i);
+
+            using (FileStream file = new FileStream(newFileName, FileMode.Create, FileAccess.Write))
+            {
+                workbook.Write(file);
+                file.Close();
+            }
         }
     }
 }
