@@ -42,22 +42,28 @@ class Controller
     internal static string SetFileName(string veznaFile)
     {
         var measures = GetMeasures(veznaFile);
+        var period = File.ReadAllLines(veznaFile, Excel.srcEncoding)[3];
+        var fromTo = period.Split(new string[] {"за периода от", "до"}, StringSplitOptions.TrimEntries);
+        string from = fromTo[1];
+        string to = fromTo[2];
+        DateTime fromDateTime = DateTime.Parse(from);
+        DateTime toDateTime = DateTime.Parse(to);
         string shift = string.Empty;
-        var firstMeasureTime = measures.FirstOrDefault().Value.BrutoTime;
-        var lastMeasureTime = measures.LastOrDefault().Value.BrutoTime;
+        // var firstMeasureTime = measures.FirstOrDefault().Value.BrutoTime;
+        // var lastMeasureTime = measures.LastOrDefault().Value.BrutoTime;
 
-        if (lastMeasureTime.Day == firstMeasureTime.Day + 1)
+        if (fromDateTime.Day + 1 == toDateTime.Day)
         {
             shift = "-Нощна";
         }
-        else if (lastMeasureTime.Day == firstMeasureTime.Day
-            && firstMeasureTime.TimeOfDay > Config.beginShift
-            && lastMeasureTime.TimeOfDay < Config.endShift)
+        else if (fromDateTime.Day == toDateTime.Day
+            && fromDateTime.TimeOfDay > Config.beginShift
+            && toDateTime.TimeOfDay < Config.endShift)
         {
             shift = "-Дневна";
         }
 
-        return firstMeasureTime.ToString("yyyy-MM-dd") + shift + ".TXT";
+        return fromDateTime.ToString("yyyy-MM-dd") + shift + ".TXT";
     }
 
     private static DataTable InsertGeologHeader()
