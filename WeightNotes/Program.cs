@@ -15,7 +15,7 @@ if (newVeznaFiles.Count() > 0)
         File.Copy(newVeznaFile.FullName, newFileName, true);
         TextFile.Log("### Справката за деня беше копирана от " + newVeznaFile.FullName + " в " + newFileName, Config.logPath);
     }
-    var files = Directory.GetFiles(Environment.CurrentDirectory, "*.TXT").Where(name => !name.EndsWith("на.TXT"));
+    var files = Directory.GetFiles(Environment.CurrentDirectory, "*.TXT");//.Where(name => !name.EndsWith("на.TXT"));
     Dictionary<int, Measure> measures = new Dictionary<int, Measure>();
 
     foreach (var file in files)
@@ -46,7 +46,7 @@ if (newVeznaFiles.Count() > 0)
             string passwd = args[0];
             string recipient = args[1];
             string senderName = JsonSerializer.Deserialize<ConfigEmail>(Config.config).User.Name;
-            if (missingNotesCsvFile != string.Empty)
+            if (missingNotesCsvFile != string.Empty && args.Length == 2)
             {
                 Email.Send(Config.config, passwd, recipient, new List<string>(),
                     "Липсващи кантарни бележки за месеца", "Поздрави,\n" + senderName, new string[] { missingNotesCsvFile });
