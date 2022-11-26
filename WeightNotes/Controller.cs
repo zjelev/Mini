@@ -7,7 +7,7 @@ using OfficeOpenXml.Style;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 
-class Controller
+public class Controller
 {
     internal static Dictionary<int, Measure> GetMeasures(string veznaFile)
     {
@@ -77,7 +77,7 @@ class Controller
         return dataTable;
     }
 
-    internal static void FillGeologInfo(Dictionary<int, Measure> measures)
+    public static void FillGeologInfo(Dictionary<int, Measure> measures)
     {
         int days = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
 
@@ -149,7 +149,7 @@ class Controller
         }
     }
 
-    internal static void FillAllMeasures(Dictionary<int, Measure> measures)
+    public static void FillAllMeasures(Dictionary<int, Measure> measures)
     {
         string header = "No.;Дата;Ремарке;Доставчик;Дестинация;Клиент;Вид товар;Бруто kg;Кант.бел.№;Нето kg;Време бруто";
         string fileName = "Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month;
@@ -165,7 +165,7 @@ class Controller
         TextFile.SaveNew(Config.logPath, allMeasures, fileName + ".csv");
     }
 
-    internal static void FillAllMeasures(Dictionary<int, Measure> measures, string fileNameXlsx)
+    public static void FillAllMeasures(Dictionary<int, Measure> measures, string fileNameXlsx)
     {
         string header = "No.;Дата;Ремарке;Доставчик;Дестинация;Клиент;Вид товар;Бруто kg;Кант.бел.№;Нето kg;Време бруто";
 
@@ -226,7 +226,7 @@ class Controller
         }
     }
 
-    internal static string FillMissingNotes(Dictionary<int, Measure> measures)
+    public static string FillMissingNotes(Dictionary<int, Measure> measures)
     {
         StringBuilder missingNotes = new StringBuilder();
         missingNotes.AppendLine("Дата;Номер");
@@ -248,7 +248,7 @@ class Controller
         return TextFile.SaveNew(Config.logPath, missingNotes, Config.logPath + "Липсващи бележки.csv");
     }
 
-    internal static string FillPlan(Dictionary<int, Measure> measures)
+    public static string FillPlan(Dictionary<int, Measure> measures)
     {
         string planXlxFile = Directory.GetFiles(Config.logPath, Config.speditorFile).Where(name => !name.Contains("попълнен")).FirstOrDefault();
 
