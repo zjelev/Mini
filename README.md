@@ -24,5 +24,5 @@ Collects the materials SAP No., name, etc. from file Материали-*.xls? a
 # Utils
 Library
 
-#ParadoxReader
+# ParadoxReader
 The "Paradox database native .NET reader" library developed by Petr Briza ported to .net7.0
