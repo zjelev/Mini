@@ -1,4 +1,4 @@
-﻿var dbPath = "..\\ParadoxDB";
+﻿var dbPath = "..\\..\\..\\ParadoxDB";
 
 Console.WriteLine("Test 1: sequential read first 10 records from start");
 Console.WriteLine("==========================================================");
@@ -36,6 +36,6 @@ while (rdr.Read())
         Console.WriteLine("    {0} = {1}", rdr.GetName(i), rdr[i]);
     }
 }
-string test = "Това е проба";
-Console.WriteLine(test + " -- press [enter] to continue --");
+
+Console.WriteLine(" -- press [enter] to continue --");
 Console.ReadKey();
