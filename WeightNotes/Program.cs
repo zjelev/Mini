@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Text.Json;
 using Utils;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -13,10 +12,10 @@ if (newVeznaFiles.Count() > 0)
     {
         newFileName = Controller.SetFileName(newVeznaFile.FullName);
         File.Copy(newVeznaFile.FullName, newFileName, true);
-        TextFile.Log("### Справката за деня беше копирана от " + newVeznaFile.FullName + " в " + newFileName, Config.logPath);
+        TextFile.Log("### Справката за деня беше копирана от " + newVeznaFile.FullName + " в " + newFileName, Utils.Config.logPath);
     }
     var files = Directory.GetFiles(Environment.CurrentDirectory, "*.TXT");//.Where(name => !name.EndsWith("на.TXT"));
-    Dictionary<int, Measure> measures = new Dictionary<int, Measure>();
+    var measures = new Dictionary<int, Measure>();
 
     foreach (var file in files)
     {
@@ -32,57 +31,11 @@ if (newVeznaFiles.Count() > 0)
     measures = measures.OrderBy(m => m.Key).ToDictionary(m => m.Key, m => m.Value);
 
     Controller.FillGeologInfo(measures);
-
     string fileNameXlsx = "Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month + ".xlsx";
-
     Controller.FillAllMeasures(measures, fileNameXlsx);
-
-    string missingNotesCsvFile = Controller.FillMissingNotes(measures);
-
-    if (args.Length > 1)
-    {
-        try
-        {
-            string passwd = args[0];
-            string recipient = args[1];
-            string senderName = JsonSerializer.Deserialize<ConfigEmail>(Config.config).User.Name;
-            if (missingNotesCsvFile != string.Empty && args.Length == 2)
-            {
-                Email.Send(Config.config, passwd, recipient, new List<string>(),
-                    "Липсващи кантарни бележки за месеца", "Поздрави,\n" + senderName, new string[] { missingNotesCsvFile });
-
-                TextFile.Log("### Изпратена справка за липсващи бележки", Config.logPath);
-            }
-
-            List<string> ccRecipients = new List<string>();
-
-            if (args.Length > 2)
-            {
-                for (int i = 2; i < args.Length; i++)
-                {
-                    ccRecipients.Add(args[i]);
-                }
-            }
-
-            StringBuilder body = new StringBuilder();
-            body.AppendLine("Това е автоматично генериран е-мейл.");
-
-            Email.Send(Config.config, passwd, recipient, ccRecipients, "Справка автовезна р-к 3", body.ToString(),
-               newFileName, Controller.FillPlan(measures));
-            string log = "### Изпратен е-мейл до спедитори";
-            string account = JsonSerializer.Deserialize<ConfigEmail>(Config.config).User.Account;
-            account = account.Substring(0, account.IndexOf('.'));
-            Email.Send(Config.config, passwd, account + "@abv.bg", new List<string>(), log,
-                measures.LastOrDefault().Key + " - " + measures.LastOrDefault().Value.BrutoTime.ToString("dd.MM HH:mm"));
-            TextFile.Log(log, Config.logPath);
-        }
-        catch (System.Exception e)
-        {
-            TextFile.Log(e.Message, Config.logPath);
-        }
-    }
+    Controller.SendMail(args, newFileName, measures);
 }
 else
 {
-    TextFile.Log("Няма нова справка", Config.logPath);
+    TextFile.Log("Няма нова справка", Utils.Config.logPath);
 }

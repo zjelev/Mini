@@ -1,6 +1,7 @@
 using System.Data;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using Utils;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -162,7 +163,7 @@ public class Controller
                             $"{measure.Value.BrutoNeto};{measure.Value.BrutoTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)}");
         }
 
-        TextFile.SaveNew(Config.logPath, allMeasures, fileName + ".csv");
+        TextFile.SaveNew(allMeasures, fileName + ".csv");
     }
 
     public static void FillAllMeasures(Dictionary<int, Measure> measures, string fileNameXlsx)
@@ -222,11 +223,11 @@ public class Controller
             // cell2.SetCellValue(0);
 
             workbook.Write(fs);
-            TextFile.Log($"Файлът {fileNameXlsx} е обновен", Config.logPath);
+            TextFile.Log($"Файлът {fileNameXlsx} е обновен", Utils.Config.logPath);
         }
     }
 
-    public static string FillMissingNotes(Dictionary<int, Measure> measures)
+    public static bool FillMissingNotes(Dictionary<int, Measure> measures, string filePath)
     {
         StringBuilder missingNotes = new StringBuilder();
         missingNotes.AppendLine("Дата;Номер");
@@ -245,12 +246,12 @@ public class Controller
                 }
             }
         }
-        return TextFile.SaveNew(Config.logPath, missingNotes, Config.logPath + "Липсващи бележки.csv");
+        return TextFile.SaveNew(missingNotes, filePath);
     }
 
     public static string FillPlan(Dictionary<int, Measure> measures)
     {
-        string planXlxFile = Directory.GetFiles(Config.logPath, Config.speditorFile).Where(name => !name.Contains("попълнен")).FirstOrDefault();
+        string planXlxFile = Directory.GetFiles(Utils.Config.logPath, Config.speditorFile).Where(name => !name.Contains("попълнен")).FirstOrDefault();
 
         if (planXlxFile != null)
         {
@@ -324,7 +325,7 @@ public class Controller
                     }
                     catch (KeyNotFoundException knfe)
                     {
-                        TextFile.Log($"{ws.Name} - No. {++knfeCounter}: {knfe.Message}", Config.logPath);
+                        TextFile.Log($"{ws.Name} - No. {++knfeCounter}: {knfe.Message}", Utils.Config.logPath);
                     }
                     dataTable.Rows.Add(truckInfo.Value.Id, truckInfo.Value.TractorNum, truckInfo.Key,
                                 truckInfo.Value.Driver, truckInfo.Value.Egn, truckInfo.Value.Phone,
@@ -362,7 +363,7 @@ public class Controller
                 if (sumInXlxFile != sumMeasuresCurrentDay)
                 {
                     string error = "Нетото за деня се различава.";
-                    TextFile.Log(error, Config.logPath);
+                    TextFile.Log(error, Utils.Config.logPath);
                     return error;
                 }
                 else
@@ -383,7 +384,7 @@ public class Controller
         }
         else
         {
-            TextFile.Log("За днес не са планирани камиони.", Config.logPath);
+            TextFile.Log("За днес не са планирани камиони.", Utils.Config.logPath);
             return null;
         }
     }
@@ -431,5 +432,53 @@ public class Controller
             trucksPlannedMonthly.Add(ws.TableName, trucksPlannedDaily);
         }
         return trucksPlannedMonthly;
+    }
+
+    public static void SendMail(string[] args, string newFileName, Dictionary<int, Measure> measures)
+    {
+        if (args.Length > 1)
+        {
+            try
+            {
+                string passwd = args[0];
+                string recipient = args[1];
+                string senderName = JsonSerializer.Deserialize<ConfigEmail>(Config.config).User.Name;
+                string missingNotesFile = Utils.Config.logPath + "Липсващи бележки.csv";
+
+                if (FillMissingNotes(measures, missingNotesFile) && args.Length == 2)
+                {
+                    Email.Send(Config.config, passwd, recipient, new List<string>(),
+                        "Липсващи кантарни бележки за месеца", "Поздрави,\n" + senderName, new string[] { missingNotesFile });
+
+                    TextFile.Log("### Изпратена справка за липсващи бележки", Utils.Config.logPath);
+                }
+
+                List<string> ccRecipients = new List<string>();
+
+                if (args.Length > 2)
+                {
+                    for (int i = 2; i < args.Length; i++)
+                    {
+                        ccRecipients.Add(args[i]);
+                    }
+                }
+
+                StringBuilder body = new StringBuilder();
+                body.AppendLine("Това е автоматично генериран е-мейл.");
+
+                Email.Send(Config.config, passwd, recipient, ccRecipients, "Справка автовезна р-к 3", body.ToString(),
+                   newFileName, FillPlan(measures));
+                string log = "### Изпратен е-мейл до спедитори";
+                string account = JsonSerializer.Deserialize<ConfigEmail>(Config.config).User.Account;
+                account = account.Substring(0, account.IndexOf('.'));
+                Email.Send(Config.config, passwd, account + "@abv.bg", new List<string>(), log,
+                    measures.LastOrDefault().Key + " - " + measures.LastOrDefault().Value.BrutoTime.ToString("dd.MM HH:mm"));
+                TextFile.Log(log, Utils.Config.logPath);
+            }
+            catch (System.Exception e)
+            {
+                TextFile.Log(e.Message, Utils.Config.logPath);
+            }
+        }
     }
 }
