@@ -200,37 +200,36 @@ namespace Utils
             }
         }
 
-        public static string SaveNew(string logPath, StringBuilder sb, string file)
+        public static bool SaveNew(StringBuilder sb, string file)
         {
-            string newFileName = string.Empty;
+            bool result = true;
             if (File.Exists(file))
             {
                 File.WriteAllText(file + "-temp", sb.ToString(), Excel.srcEncoding);
                 if (!FilesMatch(file, file + "-temp"))
                 {
                     File.Copy(file + "-temp", file, true);
-                    Log($" ### Файлът {Path.GetFileName(file)} беше обновен.", logPath);
-                    newFileName = file;
+                    Log($" ### Файлът {Path.GetFileName(file)} беше обновен.", Config.logPath);
                 }
                 else
                 {
-                    Log($"Файлът {Path.GetFileName(file)} не беше обновен.", logPath);
+                    Log($"Файлът {Path.GetFileName(file)} не беше обновен.", Config.logPath);
+                    result = false;
                 }
                 File.Delete(file + "-temp");
             }
             else
             {
                 File.WriteAllText(file, sb.ToString(), Excel.srcEncoding);
-                Log($" ### Файлът {Path.GetFileName(file)} беше създаден.", logPath);
-                newFileName = file;
+                Log($" ### Файлът {Path.GetFileName(file)} беше създаден.", Config.logPath);
             }
-            return newFileName;
+            return result;
         }
 
-        public static string SaveNew(StringBuilder sb, string file)
-        {
-            return SaveNew(Environment.CurrentDirectory, sb, file);
-        }
+        // public static bool SaveNew(StringBuilder sb)
+        // {
+        //     return SaveNew(Environment.CurrentDirectory, sb, file);
+        // }
     }
 
     // This implementation defines a simple comparison between two FileInfo objects. It compares their last write time and their length in bytes.  
