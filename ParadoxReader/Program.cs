@@ -1,14 +1,30 @@
-﻿var dbPath = "\\\\" + Config.veznaHost + "\\" + Config.veznaParadoxDb;
-dbPath = "..\\..\\DBs\\ParadoxDB"; //test
-var tableName = "Docums";
-var measures = new Dictionary<int, Measure>();
-int month = ReadDb(dbPath, tableName, measures);
-Controller.FillAllMeasures(measures, "Всички м." + month + ".xlsx");
-Controller.FillGeologInfo(measures);
-Controller.FillMissingNotes(measures);
-Controller.FillPlan(measures);
+﻿using System.Text;
+using Utils;
 
-static int ReadDb(string dbPath, string tableName, Dictionary<int, Measure> measures)
+var productionDbPath = "\\\\" + Config.veznaHost + "\\" + Config.veznaParadoxDb;
+var copyDb = "..\\..\\DBs\\ParadoxDB";
+productionDbPath = copyDb + "-test";
+var tableName = "Docums";
+var productionDbFiles = Directory.GetFiles(productionDbPath, tableName + ".*");
+foreach (var file in productionDbFiles)
+{
+    File.Copy(file, Path.Combine(copyDb, Path.GetFileName(file)), true);
+}
+
+var measures = new Dictionary<int, Measure>();
+string lastMeasure = ReadDb(copyDb, tableName, measures);
+if (TextFile.SaveNew(new StringBuilder(lastMeasure), "lastMeasure.txt"))
+{
+    string month = lastMeasure.Substring(0, lastMeasure.IndexOf(';'));
+    Controller.FillAllMeasures(measures, "Всички " + month + ".xlsx");
+    Controller.FillGeologInfo(measures);
+    Controller.FillPlan(measures);
+    string newFileName = string.Empty;
+
+    Controller.SendMail(args, newFileName, measures);
+}
+
+static string ReadDb(string dbPath, string tableName, Dictionary<int, Measure> measures)
 {
     var table = new ParadoxTable(dbPath, tableName);
     int counter = 1;
@@ -74,11 +90,12 @@ static int ReadDb(string dbPath, string tableName, Dictionary<int, Measure> meas
     }
     if (measures.FirstOrDefault().Value.BrutoTime.Month == measures.LastOrDefault().Value.BrutoTime.Month)
     {
-        return measures.FirstOrDefault().Value.BrutoTime.Month;
+        var last = measures.LastOrDefault();
+        return "м." + last.Value.BrutoTime.Month + ";" + last.Key + ";" + last.Value.BrutoTime + ";" + last.Value.BrutoNeto;
     }
     else
     {
-        return 0;
+        return string.Empty;
     }
 }
 
