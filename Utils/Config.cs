@@ -34,4 +34,9 @@ namespace Utils
         public string Domain { get; set; }
         public int Port { get; set; }
     }
+
+    public class Config
+    {
+        public static string logPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar;
+    }
 }
