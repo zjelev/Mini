@@ -51,18 +51,16 @@ namespace Utils
         // stackoverflow.com/questions/29086612/convert-text-file-to-excel
         public static void ConvertToCsv(string[] sourcefile, string destfile)
         {
-            using (StreamWriter csvfile = new StreamWriter(destfile))
-            {
-                string[] lines, cells;
-                lines = sourcefile; //File.ReadAllLines(sourcefile);
+            using StreamWriter csvfile = new StreamWriter(destfile);
+            string[] lines, cells;
+            lines = sourcefile; //File.ReadAllLines(sourcefile);
 
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    cells = lines[i].Split(new Char[] { '\t', ';', ' ' });
-                    for (int j = 0; j < cells.Length; j++)
-                        csvfile.Write(cells[j] + ",");
-                    csvfile.WriteLine();
-                }
+            for (int i = 0; i < lines.Length; i++)
+            {
+                cells = lines[i].Split(new Char[] { '\t', ';', ' ' });
+                for (int j = 0; j < cells.Length; j++)
+                    csvfile.Write(cells[j] + ",");
+                csvfile.WriteLine();
             }
         }
 
@@ -92,40 +90,40 @@ namespace Utils
         {
             if (File.Exists(path2))
             {
-                using (FileStream fs1 = new FileStream(path1, FileMode.Open),
-                  fs2 = new FileStream(path2, FileMode.Open))
+                using FileStream fs1 = new FileStream(path1, FileMode.Open),
+                                fs2 = new FileStream(path2, FileMode.Open);
+
+                int c1 = 0, c2 = 0;
+                do
                 {
-                    int c1 = 0, c2 = 0;
-                    do
-                    {
-                        c1 = fs1.ReadByte();
-                        c2 = fs2.ReadByte();
-                    }
-                    while (c1 == c2 && c1 != -1 && c2 != -1);
-
-                    if (c1 != c2)
-                    {
-                        Console.WriteLine("Files are different:");
-                        // var file1Lines = File.ReadLines(path1);
-                        // var file2Lines = File.ReadLines(path2);
-                        // IEnumerable<String> inFirstNotInSecond = file1Lines.Except(file2Lines);
-                        // IEnumerable<String> inSecondNotInFirst = file2Lines.Except(file1Lines);
-
-                        // Console.WriteLine($"-----In {path1} not in {path2}-----:");
-                        // foreach (var line in inFirstNotInSecond)
-                        // {
-                        //     Console.WriteLine(line);
-                        // }
-                        // Console.WriteLine($"-----In {path2} not in {path1}-----:");
-                        // foreach (var line in inSecondNotInFirst)
-                        // {
-                        //     Console.WriteLine(line);
-                        // }
-                        return false;
-                    }
-                    Console.WriteLine("Files match");
-                    return true;
+                    c1 = fs1.ReadByte();
+                    c2 = fs2.ReadByte();
                 }
+                while (c1 == c2 && c1 != -1 && c2 != -1);
+
+                if (c1 != c2)
+                {
+                    Console.WriteLine("Files are different:");
+                    // var file1Lines = File.ReadLines(path1);
+                    // var file2Lines = File.ReadLines(path2);
+                    // IEnumerable<String> inFirstNotInSecond = file1Lines.Except(file2Lines);
+                    // IEnumerable<String> inSecondNotInFirst = file2Lines.Except(file1Lines);
+
+                    // Console.WriteLine($"-----In {path1} not in {path2}-----:");
+                    // foreach (var line in inFirstNotInSecond)
+                    // {
+                    //     Console.WriteLine(line);
+                    // }
+                    // Console.WriteLine($"-----In {path2} not in {path1}-----:");
+                    // foreach (var line in inSecondNotInFirst)
+                    // {
+                    //     Console.WriteLine(line);
+                    // }
+                    return false;
+                }
+                Console.WriteLine("Files match");
+                return true;
+
             }
             return false;
         }
@@ -216,7 +214,7 @@ namespace Utils
                 }
                 else
                 {
-                    Log($"Няма нова информация. Файлът {Path.GetFileName(file)} не беше обновен.", logPath);
+                    Log($"Файлът {Path.GetFileName(file)} не беше обновен.", logPath);
                 }
                 File.Delete(file + "-temp");
             }
