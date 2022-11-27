@@ -16,22 +16,18 @@ namespace Utils
             using MailMessage mail = new MailMessage();
 
             mail.From = new MailAddress(sender);
-
-            if (recipient == "sender")
-            {
-                mail.To.Add(sender);
-            }
-            else
-            {
-                mail.To.Add(recipient);
-            }
+            mail.To.Add(recipient);
 
             foreach (var ccRecipient in ccRecipients)
             {
                 mail.CC.Add(ccRecipient);
             }
 
-            mail.Bcc.Add(sender);
+            var accountFirstName = account.Substring(0, account.IndexOf('.'));
+            if (!recipient.StartsWith(accountFirstName))
+            {
+                mail.Bcc.Add(sender);
+            }
 
             mail.Subject = subject;
             mail.Body = body + Environment.NewLine + "Contact: " + JsonSerializer.Deserialize<ConfigEmail>(config).User.Phone;
