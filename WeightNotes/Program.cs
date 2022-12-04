@@ -10,7 +10,7 @@ if (newVeznaFiles.Count() > 0)
     string newFileName = string.Empty;
     foreach (var newVeznaFile in newVeznaFiles)
     {
-        newFileName = Controller.SetFileName(newVeznaFile.FullName);
+        newFileName = WeightNotes.Controller.SetFileName(newVeznaFile.FullName);
         File.Copy(newVeznaFile.FullName, newFileName, true);
         TextFile.Log("### Справката за деня беше копирана от " + newVeznaFile.FullName + " в " + newFileName, Utils.Config.logPath);
     }
@@ -19,7 +19,7 @@ if (newVeznaFiles.Count() > 0)
 
     foreach (var file in files)
     {
-        Dictionary<int, Measure> currentMeasures = Controller.GetMeasures(file);
+        Dictionary<int, Measure> currentMeasures = WeightNotes.Controller.GetMeasures(file);
         foreach (var measure in currentMeasures)
         {
             if (!measures.ContainsKey(measure.Key))
@@ -30,10 +30,10 @@ if (newVeznaFiles.Count() > 0)
     }
     measures = measures.OrderBy(m => m.Key).ToDictionary(m => m.Key, m => m.Value);
 
-    Controller.FillGeologInfo(measures);
+    WeightNotes.Controller.FillGeologInfo(measures);
     string fileNameXlsx = "Всички м." + measures.FirstOrDefault().Value.BrutoTime.Month + ".xlsx";
-    Controller.FillAllMeasures(measures, fileNameXlsx);
-    Controller.SendMail(args, newFileName, measures);
+    WeightNotes.Controller.FillAllMeasures(measures, fileNameXlsx);
+    WeightNotes.Controller.SendMail(args, newFileName, measures);
 }
 else
 {

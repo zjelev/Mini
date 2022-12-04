@@ -31,7 +31,8 @@ public class Measure
     public int Num { get; }
     public int Id { get; set; }
     public DateTime BrutoTime { get; set; }
-    public string RegNum { get;}
+    public DateTime TaraTime { get; }
+    public string RegNum { get; }
     public int Bruto { get; set; }
     public int Tara { get; set; }
 
