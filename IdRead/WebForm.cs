@@ -21,7 +21,7 @@ namespace IdRead
                 driver.Manage().Window.Maximize();
 
                 //Add your MVC project URL
-                var config = File.ReadAllText("..\\WeightNotes\\config.json");
+                var config = File.ReadAllText("..\\WeightNotes\\bin\\config.json");
                 string? host = System.Text.Json.JsonSerializer.Deserialize<ConfigEmail>(config)?.SmtpServer.Host;
                 string? server = System.Text.Json.JsonSerializer.Deserialize<ConfigEmail>(config)?.SmtpServer.Domain;
                 driver.Navigate().GoToUrl("https://web" + host + "." + server);
