@@ -1,9 +1,14 @@
 ﻿using System.Text;
 using Utils;
 
-var productionDbPath = "\\\\" + Config.veznaHost + "\\" + Config.veznaParadoxDb;
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+// var template = File.ReadAllLines("template.t4", Encoding.GetEncoding("windows-1251"));
+// Console.WriteLine(File.ReadAllText("Sample.txt"));
+
+var productionDbPath = "\\\\" + Config.veznaHost + "\\" + Config.veznaDb;
 var copyDb = "..\\..\\DBs\\ParadoxDB";
-productionDbPath = copyDb + "-test";
+//productionDbPath = copyDb + "-test";
 var tableName = "Docums";
 var productionDbFiles = Directory.GetFiles(productionDbPath, tableName + ".*");
 foreach (var file in productionDbFiles)
@@ -16,12 +21,12 @@ string lastMeasure = ReadDb(copyDb, tableName, measures);
 if (TextFile.SaveNew(new StringBuilder(lastMeasure), "lastMeasure.txt"))
 {
     string month = lastMeasure.Substring(0, lastMeasure.IndexOf(';'));
-    Controller.FillAllMeasures(measures, "Всички " + month + ".xlsx");
-    Controller.FillGeologInfo(measures);
-    Controller.FillPlan(measures);
-    string newFileName = string.Empty;
+    WeightNotes.Controller.FillAllMeasures(measures, "Всички " + month + ".xlsx");
+    WeightNotes.Controller.FillGeologInfo(measures);
+    WeightNotes.Controller.FillPlan(measures);
+    string newFileName = "template.txt";
 
-    Controller.SendMail(args, newFileName, measures);
+    WeightNotes.Controller.SendMail(args, newFileName, measures);
 }
 
 static string ReadDb(string dbPath, string tableName, Dictionary<int, Measure> measures)
@@ -98,6 +103,7 @@ static string ReadDb(string dbPath, string tableName, Dictionary<int, Measure> m
         return string.Empty;
     }
 }
+
 
 static void ReadPx(string dbPath, string tableName, Dictionary<int, Measure> measures)
 {
