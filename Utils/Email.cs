@@ -30,7 +30,7 @@ namespace Utils
             }
 
             mail.Subject = subject;
-            mail.Body = body + Environment.NewLine + "Contact: " + JsonSerializer.Deserialize<ConfigEmail>(config).User.Phone;
+            mail.Body = body;// + Environment.NewLine + "Contact: " + JsonSerializer.Deserialize<ConfigEmail>(config).User.Phone;
 
             foreach (var attach in attachments)
             {
