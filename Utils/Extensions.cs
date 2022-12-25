@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+
 namespace Utils
 {
     public static class Extensions
@@ -22,6 +25,19 @@ namespace Utils
             }
 
             return list;
+        }
+
+        public static string Sha256Hash(string readable)
+        {
+            StringBuilder hashSb = new StringBuilder();
+
+            using var hash = SHA256.Create();
+            byte[] result = hash.ComputeHash(Encoding.UTF8.GetBytes(readable));
+
+            foreach (byte b in result)
+                hashSb.Append(b.ToString("x2"));
+
+            return hashSb.ToString();
         }
     }
 }
