@@ -353,10 +353,9 @@ MigrationBackup/
 
 *.vscode/*
 *.json
-log.txt
+*.txt
 *.xlsx
 *.csv
 *.sql
-*Last.txt
 config.json
 logo.png
