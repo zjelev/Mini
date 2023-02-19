@@ -12,6 +12,7 @@ namespace Utils
         public string FirstSourceDb { get; set; }
         public string SecondSourceDb { get; set; }
         public string SecondSourceTable { get; set; }
+        public string[] Tables { get; set; }
     }
 
     public class ConfigEmail
@@ -26,6 +27,7 @@ namespace Utils
         public string Phone { get; set; }
         public string Password { get; set; }
         public string Position { get; set; }
+        public string PersId { get; set; }
     }
 
     public class SmtpServer
@@ -38,5 +40,6 @@ namespace Utils
     public class Config
     {
         public static string logPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar;
+        public Dictionary<string, string[]> NoDodCodes { get; set; }
     }
 }
