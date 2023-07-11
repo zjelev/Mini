@@ -66,7 +66,7 @@ namespace Utils
 
         public static string ReplaceCyrillic(string regNum)
         {
-            if ((Regex.IsMatch(regNum, @"\p{IsCyrillic}")))
+            if (regNum != null && (Regex.IsMatch(regNum, @"\p{IsCyrillic}")))
             {
                 // TODO: Use foreach
                 regNum = regNum.Replace('А', 'A');
