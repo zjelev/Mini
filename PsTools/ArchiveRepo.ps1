@@ -2,7 +2,7 @@
 $ParentFolder = Split-Path -Path $PSScriptRoot -Parent
 $SourceFolder = Split-Path -Path $ParentFolder -Parent
 $FolderName = Split-Path -Path $SourceFolder -Leaf
-$DestinationFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\.." -Resolve | Join-Path -ChildPath "Archives\$FolderName\$(Get-Date -f yy.M.d_HH-mm)"
+$DestinationFolder = "D:\Archives\$FolderName\$(Get-Date -f yy.M.d_HH-mm)"
 
 # Create the destination folder if it does not exist
 if (-not (Test-Path $DestinationFolder)) {
