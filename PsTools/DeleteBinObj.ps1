@@ -1,2 +1,2 @@
-# Powershell.exe -ExecutionPolicy Bypass -Command D:\Archives\repo\DeleteBinObj.ps1
-Get-ChildItem D:\Archives\repo -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }
+# Powershell.exe -ExecutionPolicy Bypass -Command D:\repo\Mini\PsTools\DeleteBinObj.ps1
+Get-ChildItem D:\Archives\repo\WebAv -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }

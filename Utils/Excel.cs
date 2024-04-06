@@ -143,7 +143,12 @@ namespace Utils
             string? value = cell.CellValue?.InnerText;
             if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
             {
-                return doc.WorkbookPart.SharedStringTablePart.SharedStringTable.ChildElements.GetItem(int.Parse(value)).InnerText;
+                int index = int.Parse(value);
+                var sharedStringTable = doc.WorkbookPart.SharedStringTablePart.SharedStringTable;
+                if (index >= 0 && index < sharedStringTable.ChildElements.Count)
+                {
+                    return sharedStringTable.ChildElements[index].InnerText;
+                }
             }
             return value;
         }
