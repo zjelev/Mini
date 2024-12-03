@@ -5,12 +5,13 @@ namespace Utils
 {
     public class Email
     {
-        public static void Send(string config, string passwd, string recipient, List<string> ccRecipients, string subject, string body, params string[] attachments)
+        public static void Send(string config, string recipient, List<string> ccRecipients, string subject, string body, params string[] attachments)
         {
             string mailServer = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Host;
             string domain = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Domain;
             string account = JsonSerializer.Deserialize<ConfigEmail>(config)?.User.Account;
             string sender = account + "@" + domain;
+            var accountFirstName = account.Substring(0, account.IndexOf('.'));
 
             using SmtpClient smtpServer = new SmtpClient(mailServer + "." + domain);
             using MailMessage mail = new MailMessage();
@@ -19,15 +20,10 @@ namespace Utils
             mail.To.Add(recipient);
 
             foreach (var ccRecipient in ccRecipients)
-            {
                 mail.CC.Add(ccRecipient);
-            }
 
-            var accountFirstName = account.Substring(0, account.IndexOf('.'));
             if (!recipient.StartsWith(accountFirstName))
-            {
                 mail.Bcc.Add(sender);
-            }
 
             mail.Subject = subject;
             mail.Body = body;// + Environment.NewLine + "Contact: " + JsonSerializer.Deserialize<ConfigEmail>(config).User.Phone;
@@ -35,14 +31,10 @@ namespace Utils
             foreach (var attach in attachments)
             {
                 if (attach != null)
-                {
-                    Attachment attachment = new Attachment(attach);
-                    mail.Attachments.Add(attachment);
-                }
+                    mail.Attachments.Add(new Attachment(attach));
             }
 
             smtpServer.Port = JsonSerializer.Deserialize<ConfigEmail>(config).SmtpServer.Port;
-            smtpServer.Credentials = new System.Net.NetworkCredential(account, passwd);
             smtpServer.EnableSsl = false;
 
             smtpServer.Send(mail);
