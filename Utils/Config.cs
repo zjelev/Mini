@@ -62,19 +62,19 @@ namespace Utils
     }
 	
 	public class WebServer
-{
-    public int Port { get; set; }
-    public string FilesPath { get; set; }
-    public string OpisPath { get; set; }
-    public string WwwRootPath { get; set; }
-}
+    {
+        public int Port { get; set; }
+        public string FilesPath { get; set; }
+        public string OpisPath { get; set; }
+        public string WwwRootPath { get; set; }
+    }
 
-public class Speditor
-{
-    public string PlanFile { get; set; }
-    public string Email { get; set; }
-    public string Supplier { get; set; }
-    public string DateFormat { get; set; }
-    public string Product { get; set; }
-}
+    public class Speditor
+    {
+        public string PlanFile { get; set; }
+        public string Email { get; set; }
+        public string Supplier { get; set; }
+        public string DateFormat { get; set; }
+        public string Product { get; set; }
+    }
 }
