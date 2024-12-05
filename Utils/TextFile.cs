@@ -66,22 +66,19 @@ namespace Utils
 
         public static string ReplaceCyrillic(string regNum)
         {
-            if (regNum != null && (Regex.IsMatch(regNum, @"\p{IsCyrillic}")))
-            {
-                // TODO: Use foreach
-                regNum = regNum.Replace('А', 'A');
-                regNum = regNum.Replace('В', 'B');
-                regNum = regNum.Replace('С', 'C');
-                regNum = regNum.Replace('Е', 'E');
-                regNum = regNum.Replace('К', 'K');
-                regNum = regNum.Replace('М', 'M');
-                regNum = regNum.Replace('Н', 'H');
-                regNum = regNum.Replace('О', 'O');
-                regNum = regNum.Replace('Р', 'P');
-                regNum = regNum.Replace('Т', 'T');
-                regNum = regNum.Replace('У', 'Y');
-                regNum = regNum.Replace('Х', 'X');
-            }
+            if (regNum != null && Regex.IsMatch(regNum, @"\p{IsCyrillic}"))
+                regNum = regNum.Replace('А', 'A')
+                .Replace('В', 'B')
+                .Replace('С', 'C')
+                .Replace('Е', 'E')
+                .Replace('К', 'K')
+                .Replace('М', 'M')
+                .Replace('Н', 'H')
+                .Replace('О', 'O')
+                .Replace('Р', 'P')
+                .Replace('Т', 'T')
+                .Replace('У', 'Y')
+                .Replace('Х', 'X');
 
             return regNum;
         }
